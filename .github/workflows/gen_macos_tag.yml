@@ -51,7 +51,7 @@ jobs:
         run: "cargo build -p cx-terminal-gui --release"
       - name: "Build cx-mux-server (Release mode)"
         shell: bash
-        run: "cargo build -p cx-mux-server --release"
+        run: "cargo build -p wezterm-mux-server --release"
       - name: "Build strip-ansi-escapes (Release mode)"
         shell: bash
         run: "cargo build -p strip-ansi-escapes --release"
