@@ -1,5 +1,5 @@
 # Please keep these in alphabetical order.
 # https://github.com/rust-lang/rustfmt/issues/3149
 edition = "2018"
-imports_granularity = "Module"
+# imports_granularity = "Module"  # nightly-only, disabled for stable
 tab_spaces = 4

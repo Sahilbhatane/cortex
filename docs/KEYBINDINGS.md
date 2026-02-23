@@ -190,7 +190,7 @@ Enter with `CTRL+SHIFT+F` or `LEADER+/`
 
 ### Available Actions
 
-```lua
+```
 -- Navigation
 cx.action.ActivatePaneDirection "Left"
 cx.action.ActivatePaneDirection "Right"
@@ -244,7 +244,7 @@ cx.action.ScrollToPrompt(1)
 ### Conditional Actions
 
 ```lua
-{
+local conditional_close = {
     key = "w",
     mods = "CMD",
     action = cx.action_callback(function(window, pane)
