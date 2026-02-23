@@ -2,8 +2,8 @@
 <component type="desktop-application">
   <content_rating type="oars-1.0" />
   <id>org.cxlinux.cx-terminal</id>
-  <metadata_license>MIT</metadata_license>
-  <project_license>MIT</project_license>
+  <metadata_license>BSL-1.1</metadata_license>
+  <project_license>BSL-1.1</project_license>
   <name>CX Terminal</name>
   <summary>A GPU-accelerated cross-platform terminal emulator and multiplexer</summary>
   <description>
@@ -27,7 +27,7 @@
 
   <launchable type="desktop-id">cx-terminal.desktop</launchable>
 
-  <url type="homepage">https://cxlinux.org/cx-terminal</url>
+  <url type="homepage">https://cxlinux.com</url>
   <url type="help">https://cxlinux.org/cx-terminal/docs</url>
   <url type="bugtracker">https://github.com/cxlinux/cx-terminal/issues</url>
   <url type="donation">https://github.com/sponsors/cxlinux</url>

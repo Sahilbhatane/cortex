@@ -14,7 +14,7 @@
     <img src="https://github.com/cxlinux-ai/cx-core/actions/workflows/ci.yml/badge.svg" alt="Build Status" />
   </a>
   <a href="https://github.com/cxlinux-ai/cx-core/releases">
-    <img src="https://img.shields.io/badge/version-v0.2.0-brightgreen.svg" alt="Version" />
+    <img src="https://img.shields.io/badge/version-v0.3.2-brightgreen.svg" alt="Version" />
   </a>
   <a href="https://github.com/cxlinux-ai/cx-core/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/License-BSL%201.1-blue.svg" alt="License" />
