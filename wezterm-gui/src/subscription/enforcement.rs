@@ -95,15 +95,11 @@ pub fn enforce_license() -> Result<()> {
 
 /// Show registration required dialog/message
 fn show_registration_required() {
-    // Open browser to registration page
-    if let Err(e) = open::that("https://cxlinux.com/pricing") {
-        log::error!("Failed to open browser: {}", e);
-    }
-    
-    // Show toast notification
-    wezterm_toast_notification::show_notification(
-        "CX Terminal",
-        "Registration required. Opening cxlinux.com/pricing...",
+    // Show toast notification with click-to-open URL
+    wezterm_toast_notification::persistent_toast_notification_with_click_to_open_url(
+        "CX Terminal - Registration Required",
+        "Click here to register at cxlinux.com/pricing",
+        "https://cxlinux.com/pricing",
     );
     
     // Also print to stderr for terminal users
@@ -131,13 +127,10 @@ fn show_registration_required() {
 
 /// Show license expired dialog/message
 fn show_license_expired() {
-    if let Err(e) = open::that("https://cxlinux.com/pricing") {
-        log::error!("Failed to open browser: {}", e);
-    }
-    
-    wezterm_toast_notification::show_notification(
-        "CX Terminal",
-        "Your license has expired. Opening renewal page...",
+    wezterm_toast_notification::persistent_toast_notification_with_click_to_open_url(
+        "CX Terminal - License Expired",
+        "Click here to renew at cxlinux.com/pricing",
+        "https://cxlinux.com/pricing",
     );
     
     eprintln!();
@@ -157,9 +150,9 @@ fn show_license_expired() {
 
 /// Show license invalid dialog/message
 fn show_license_invalid(reason: &str) {
-    wezterm_toast_notification::show_notification(
-        "CX Terminal",
-        &format!("License invalid: {}", reason),
+    wezterm_toast_notification::persistent_toast_notification(
+        "CX Terminal - License Invalid",
+        &format!("License invalid: {}. Contact support@cxlinux.com", reason),
     );
     
     eprintln!();
@@ -182,8 +175,8 @@ fn show_license_invalid(reason: &str) {
 
 /// Show validation required message
 fn show_validation_required() {
-    wezterm_toast_notification::show_notification(
-        "CX Terminal",
+    wezterm_toast_notification::persistent_toast_notification(
+        "CX Terminal - Validation Required",
         "License validation required. Please connect to the internet.",
     );
     
