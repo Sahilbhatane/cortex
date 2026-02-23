@@ -1236,6 +1236,10 @@ fn run() -> anyhow::Result<()> {
         std::env::set_var("SSH_AUTH_SOCK", value);
     }
 
+    // Enforce license requirements before proceeding
+    // Users must register (even for free tier) before using CX Terminal
+    subscription::enforce_license()?;
+
     let sub = match opts.cmd.as_ref().cloned() {
         Some(SubCommand::BlockingStart(start)) => {
             // Act as if the normal start subcommand was used,

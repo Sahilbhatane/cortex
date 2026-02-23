@@ -16,11 +16,13 @@
 //! - `features`: Feature gate checking and enforcement
 //! - `stripe`: Stripe API integration for payments
 
+mod enforcement;
 mod features;
 mod license;
 mod stripe;
 mod tier;
 
+pub use enforcement::{check_license_on_startup, enforce_license, LicenseCheckResult};
 pub use features::{Feature, FeatureError, FeatureGate};
 pub use license::{HardwareFingerprint, License, LicenseError, LicenseValidator};
 pub use stripe::{CheckoutSession, StripeClient, StripeConfig, SubscriptionStatus};
