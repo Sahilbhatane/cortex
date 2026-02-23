@@ -11,25 +11,21 @@ on:
 
 jobs:
   build:
-    runs-on: "macos-latest"
+    runs-on: "macos-14"
     
     env:
       CARGO_INCREMENTAL: "0"
       SCCACHE_GHA_ENABLED: "true"
       RUSTC_WRAPPER: "sccache"
-      MACOSX_DEPLOYMENT_TARGET: "10.12"
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
 
     steps:
       - name: "checkout repo"
         uses: actions/checkout@v4
         with:
           submodules: "recursive"
-      - name: "Install Rust (ARM)"
-        shell: bash
-        run: "rustup target add aarch64-apple-darwin"
-      - name: "Install Rust (Intel)"
-        shell: bash
-        run: "rustup target add x86_64-apple-darwin"
+      - name: "Install Rust"
+        uses: dtolnay/rust-toolchain@stable
       - name: "Compile with sccache"
         uses: mozilla-actions/sccache-action@v0.0.9
       - name: "Cache Rust Dependencies"
@@ -40,37 +36,25 @@ jobs:
             vendor
             .cargo/config
           key: "cargo-deps-${{ hashFiles('**/Cargo.lock') }}"
-      - name: "Vendor dependecies"
+      - name: "Vendor dependencies"
         if: steps.cache-cargo-vendor.outputs.cache-hit != 'true'
         shell: bash
         run: "cargo vendor --locked --versioned-dirs >> .cargo/config"
       - name: "Install System Deps"
         shell: bash
         run: "env CI=yes PATH=$PATH ./get-deps"
-      - name: "Build cx-terminal (Release mode Intel)"
+      - name: "Build cx-terminal (Release mode)"
         shell: bash
-        run: "cargo build --target x86_64-apple-darwin -p cx-terminal --release"
-      - name: "Build cx-terminal (Release mode ARM)"
+        run: "cargo build -p cx-terminal --release"
+      - name: "Build cx-terminal-gui (Release mode)"
         shell: bash
-        run: "cargo build --target aarch64-apple-darwin -p cx-terminal --release"
-      - name: "Build cx-terminal-gui (Release mode Intel)"
+        run: "cargo build -p cx-terminal-gui --release"
+      - name: "Build cx-mux-server (Release mode)"
         shell: bash
-        run: "cargo build --target x86_64-apple-darwin -p cx-terminal-gui --release"
-      - name: "Build cx-terminal-gui (Release mode ARM)"
+        run: "cargo build -p cx-mux-server --release"
+      - name: "Build strip-ansi-escapes (Release mode)"
         shell: bash
-        run: "cargo build --target aarch64-apple-darwin -p cx-terminal-gui --release"
-      - name: "Build cx-mux-server (Release mode Intel)"
-        shell: bash
-        run: "cargo build --target x86_64-apple-darwin -p cx-mux-server --release"
-      - name: "Build cx-mux-server (Release mode ARM)"
-        shell: bash
-        run: "cargo build --target aarch64-apple-darwin -p cx-mux-server --release"
-      - name: "Build strip-ansi-escapes (Release mode Intel)"
-        shell: bash
-        run: "cargo build --target x86_64-apple-darwin -p strip-ansi-escapes --release"
-      - name: "Build strip-ansi-escapes (Release mode ARM)"
-        shell: bash
-        run: "cargo build --target aarch64-apple-darwin -p strip-ansi-escapes --release"
+        run: "cargo build -p strip-ansi-escapes --release"
       - name: "Install cargo-nextest from Cargo"
         uses: baptiste0928/cargo-install@v3
         with:
@@ -78,21 +62,17 @@ jobs:
           cache-key: "macos"
       - name: "Test"
         shell: bash
-        run: "cargo nextest run --all --no-fail-fast --target=x86_64-apple-darwin"
+        run: "cargo nextest run --all --no-fail-fast"
       - name: "Package"
-        env:
-          MACOS_APPLEID: ${{ secrets.MACOS_APPLEID }}
-          MACOS_APP_PW: ${{ secrets.MACOS_APP_PW }}
-          MACOS_CERT: ${{ secrets.MACOS_CERT }}
-          MACOS_CERT_PW: ${{ secrets.MACOS_CERT_PW }}
-          MACOS_TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
         shell: bash
         run: "bash ci/deploy.sh"
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
         with:
           name: "macos"
-          path: "WezTerm-*.zip"
+          path: |
+            CXTerminal-*.zip
+            CXTerminal-*.dmg
 
   upload:
     runs-on: ubuntu-latest
@@ -100,33 +80,17 @@ jobs:
     if: github.repository == 'cxlinux-ai/cx-core'
     permissions:
       contents: write
-      pages: write
-      id-token: write
 
     steps:
       - name: "checkout repo"
         uses: actions/checkout@v4
-      - name: "Checkout homebrew tap"
-        uses: actions/checkout@v4
-        with:
-          repository: "wez/homebrew-wezterm"
-          path: "homebrew-wezterm"
-          token: "${{ secrets.GH_PAT }}"
-      - name: "Update homebrew tap formula"
-        shell: bash
-        run: "cp wezterm.rb homebrew-wezterm/Casks/wezterm.rb"
-      - name: "Commit homebrew tap changes"
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "Automated update to match latest tag"
-          repository: "homebrew-wezterm"
       - name: "Download artifact"
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: "macos"
       - name: "Checksum"
         shell: bash
-        run: "for f in WezTerm-*.zip ; do sha256sum $f > $f.sha256 ; done"
+        run: "for f in CXTerminal-*.zip CXTerminal-*.dmg ; do sha256sum $f > $f.sha256 ; done"
       - name: "Create pre-release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -136,4 +100,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: "bash ci/retry.sh gh release upload --clobber $(ci/tag-name.sh) WezTerm-*.zip *.sha256"
+        run: "bash ci/retry.sh gh release upload --clobber $(ci/tag-name.sh) CXTerminal-*.zip CXTerminal-*.dmg *.sha256"
