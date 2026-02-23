@@ -45,17 +45,12 @@ case $OSTYPE in
     cp -r assets/shell-completion "$zipdir/$APP_BUNDLE/Contents/Resources"
     tic -xe cx-terminal -o "$zipdir/$APP_BUNDLE/Contents/Resources/terminfo" termwiz/data/cx-terminal.terminfo
 
-    # CX Terminal: Updated binary names
-    # Map: old name -> new name (for copying into bundle)
-    declare -A BIN_MAP=(
-      ["cx-terminal"]="cx-terminal"
-      ["cx-mux-server"]="cx-mux-server"
-      ["cx-terminal-gui"]="cx-terminal-gui"
-      ["strip-ansi-escapes"]="strip-ansi-escapes"
-    )
+    # CX Terminal: Binary names to package
+    # Using simple array for bash 3.x compatibility (macOS default)
+    BINARIES=("cx-terminal" "cx-mux-server" "cx-terminal-gui" "strip-ansi-escapes")
 
-    for bin in "${!BIN_MAP[@]}" ; do
-      target_name="${BIN_MAP[$bin]}"
+    for bin in "${BINARIES[@]}" ; do
+      target_name="$bin"
       # If the user ran a simple `cargo build --release`, then we want to allow
       # a single-arch package to be built
       if [[ -f $TARGET_DIR/release/$bin ]] ; then
