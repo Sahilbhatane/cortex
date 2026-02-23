@@ -24,20 +24,20 @@ pub enum LicenseCheckResult {
 pub fn check_license_on_startup() -> LicenseCheckResult {
     let manager = get_subscription_manager();
     let manager = manager.read();
-    
+
     match manager.license() {
         Some(license) => {
             // Check if license is valid
             if license.is_expired() {
                 return LicenseCheckResult::Expired;
             }
-            
+
             // Check hardware fingerprint
             let validator = LicenseValidator::new();
             if !license.is_valid_for_hardware(validator.hardware_fingerprint()) {
                 return LicenseCheckResult::Invalid("License bound to different hardware".into());
             }
-            
+
             // Check grace period
             if let Some(last_validated) = license.last_validated {
                 let days_since = (chrono::Utc::now() - last_validated).num_days();
@@ -45,7 +45,7 @@ pub fn check_license_on_startup() -> LicenseCheckResult {
                     return LicenseCheckResult::NeedsOnlineValidation;
                 }
             }
-            
+
             LicenseCheckResult::Valid(license.clone())
         }
         None => LicenseCheckResult::NeedsRegistration,
@@ -68,12 +68,17 @@ pub fn enforce_license() -> Result<()> {
         LicenseCheckResult::Expired => {
             log::warn!("License expired");
             show_license_expired();
-            Err(anyhow!("Your CX Terminal license has expired. Please renew at https://cxlinux.com/pricing"))
+            Err(anyhow!(
+                "Your CX Terminal license has expired. Please renew at https://cxlinux.com/pricing"
+            ))
         }
         LicenseCheckResult::Invalid(reason) => {
             log::error!("License invalid: {}", reason);
             show_license_invalid(&reason);
-            Err(anyhow!("License invalid: {}. Please contact support@cxlinux.com", reason))
+            Err(anyhow!(
+                "License invalid: {}. Please contact support@cxlinux.com",
+                reason
+            ))
         }
         LicenseCheckResult::NeedsOnlineValidation => {
             log::warn!("License needs online validation (grace period expired)");
@@ -101,7 +106,7 @@ fn show_registration_required() {
         "Click here to register at cxlinux.com/pricing",
         "https://cxlinux.com/pricing",
     );
-    
+
     // Also print to stderr for terminal users
     eprintln!();
     eprintln!("╔══════════════════════════════════════════════════════════════╗");
@@ -132,7 +137,7 @@ fn show_license_expired() {
         "Click here to renew at cxlinux.com/pricing",
         "https://cxlinux.com/pricing",
     );
-    
+
     eprintln!();
     eprintln!("╔══════════════════════════════════════════════════════════════╗");
     eprintln!("║               CX Terminal - License Expired                  ║");
@@ -154,13 +159,16 @@ fn show_license_invalid(reason: &str) {
         "CX Terminal - License Invalid",
         &format!("License invalid: {}. Contact support@cxlinux.com", reason),
     );
-    
+
     eprintln!();
     eprintln!("╔══════════════════════════════════════════════════════════════╗");
     eprintln!("║               CX Terminal - License Invalid                  ║");
     eprintln!("╠══════════════════════════════════════════════════════════════╣");
     eprintln!("║                                                              ║");
-    eprintln!("║  Your license is invalid: {}                                 ", reason);
+    eprintln!(
+        "║  Your license is invalid: {}                                 ",
+        reason
+    );
     eprintln!("║                                                              ║");
     eprintln!("║  This may happen if:                                         ║");
     eprintln!("║  • License is bound to different hardware                    ║");
@@ -179,7 +187,7 @@ fn show_validation_required() {
         "CX Terminal - Validation Required",
         "License validation required. Please connect to the internet.",
     );
-    
+
     eprintln!();
     eprintln!("╔══════════════════════════════════════════════════════════════╗");
     eprintln!("║          CX Terminal - Online Validation Required            ║");
@@ -200,22 +208,21 @@ fn show_validation_required() {
 fn try_online_validation() -> Result<()> {
     let manager = get_subscription_manager();
     let mut manager = manager.write();
-    
+
     // Get mutable license
     if let Some(license) = manager.license().cloned() {
         let validator = LicenseValidator::new();
         let mut license = license;
-        
+
         // Use tokio runtime for async validation
         let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            validator.validate_online(&mut license).await
-        }).map_err(|e| anyhow!("Online validation failed: {}", e))?;
-        
+        rt.block_on(async { validator.validate_online(&mut license).await })
+            .map_err(|e| anyhow!("Online validation failed: {}", e))?;
+
         // Update the license in manager
         manager.update_license(license)?;
     }
-    
+
     Ok(())
 }
 
@@ -228,6 +235,9 @@ mod tests {
         // Without a license file, should return NeedsRegistration
         // This test relies on no license being present
         let result = check_license_on_startup();
-        assert!(matches!(result, LicenseCheckResult::NeedsRegistration | LicenseCheckResult::Valid(_)));
+        assert!(matches!(
+            result,
+            LicenseCheckResult::NeedsRegistration | LicenseCheckResult::Valid(_)
+        ));
     }
 }
