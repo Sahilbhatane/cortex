@@ -100,7 +100,7 @@ jobs:
   upload:
     runs-on: ubuntu-latest
     needs: build
-    if: github.repository == 'wezterm/wezterm'
+    if: github.repository == 'cxlinux-ai/cx-core'
     permissions:
       contents: write
       pages: write
@@ -112,11 +112,6 @@ jobs:
         run: "git config --global --add safe.directory /__w/cx-core/cx-core"
       - name: "checkout repo"
         uses: actions/checkout@v4
-      - name: "Upload to gemfury"
-        env:
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-        shell: bash
-        run: "for f in wezterm*.deb ; do curl -i -F package=@$f https://$FURY_TOKEN@push.fury.io/wez/ ; done"
       - name: "Download artifact"
         uses: actions/download-artifact@v7
         with:

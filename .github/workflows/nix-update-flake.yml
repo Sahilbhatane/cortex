@@ -12,7 +12,7 @@ on:
 jobs:
   lockfile:
     runs-on: ubuntu-latest
-    if: github.repository == 'wezterm/wezterm'
+    if: github.repository == 'cxlinux-ai/cx-core'
     steps:
       - name: Checkout
         uses: actions/checkout@v3

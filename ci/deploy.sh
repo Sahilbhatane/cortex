@@ -342,16 +342,16 @@ Package: $pkgname
 Version: ${TAG_NAME#nightly-}
 Conflicts: $conflicts
 Architecture: $(dpkg-architecture -q DEB_BUILD_ARCH_CPU)
-Maintainer: Wez Furlong <wez@wezfurlong.org>
+Maintainer: CX Linux <packages@cxlinux.com>
 Section: utils
 Priority: optional
-Homepage: https://cxlinux.ai/
-Description: Wez's Terminal Emulator.
- CX Terminal is a terminal emulator with support for modern features
- such as fonts with ligatures, hyperlinks, tabs and multiple
- windows.
+Homepage: https://cxlinux.com
+Description: CX Terminal - AI-powered terminal emulator
+ CX Terminal is an AI-powered terminal emulator with natural language
+ command assistance, subscription-based features, and modern terminal
+ capabilities including fonts with ligatures, hyperlinks, and tabs.
 Provides: x-terminal-emulator
-Source: https://cxlinux.ai/
+Source: https://cxlinux.com
 EOF
 
         cat > pkg/debian/postinst <<EOF

@@ -23,7 +23,7 @@ on:
 jobs:
   noResponse:
     runs-on: ubuntu-latest
-    if: github.repository == 'wezterm/wezterm'
+    if: github.repository == 'cxlinux-ai/cx-core'
     steps:
       - uses: actions/stale@v10.1.1
         with:
