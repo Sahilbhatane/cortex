@@ -100,7 +100,8 @@ jobs:
             libxkbcommon-x11-dev \
             libwayland-dev \
             libssl-dev \
-            libegl1-mesa-dev
+            libegl1-mesa-dev \
+            libasound2-dev
 
       - name: Build
         run: cargo build --release
