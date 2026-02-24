@@ -430,7 +430,7 @@ impl UpgradePrompt {
     /// Get the Stripe checkout URL
     pub fn checkout_url(&self) -> String {
         format!(
-            "https://cxlinux.com/checkout?tier={}",
+            "https://cxlinux.com/pricing/checkout?tier={}",
             self.required_tier.display_name().to_lowercase()
         )
     }

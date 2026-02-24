@@ -34,9 +34,9 @@ impl StripeConfig {
             publishable_key: std::env::var("STRIPE_PUBLISHABLE_KEY").ok()?,
             webhook_secret: std::env::var("STRIPE_WEBHOOK_SECRET").ok(),
             success_url: std::env::var("STRIPE_SUCCESS_URL")
-                .unwrap_or_else(|_| "https://cxlinux.com/checkout/success".to_string()),
+                .unwrap_or_else(|_| "https://cxlinux.com/pricing/success".to_string()),
             cancel_url: std::env::var("STRIPE_CANCEL_URL")
-                .unwrap_or_else(|_| "https://cxlinux.com/checkout/cancel".to_string()),
+                .unwrap_or_else(|_| "https://cxlinux.com/pricing".to_string()),
             portal_return_url: std::env::var("STRIPE_PORTAL_RETURN_URL")
                 .unwrap_or_else(|_| "https://cxlinux.com/settings".to_string()),
         })
@@ -48,8 +48,8 @@ impl StripeConfig {
             api_key,
             publishable_key,
             webhook_secret: None,
-            success_url: "https://cxlinux.com/checkout/success".to_string(),
-            cancel_url: "https://cxlinux.com/checkout/cancel".to_string(),
+            success_url: "https://cxlinux.com/pricing/success".to_string(),
+            cancel_url: "https://cxlinux.com/pricing".to_string(),
             portal_return_url: "https://cxlinux.com/settings".to_string(),
         }
     }

@@ -54,7 +54,7 @@ uuid = { version = "1.6", features = ["v4"] }
 
 # HRM AI - Optional premium agent management (enable with --features hrm)
 hrm-ai = { git = "https://github.com/mikejmorgan-ai/hrm-ai-standalone.git", optional = true }
-sqlx = { version = "0.7", default-features = false, features = ["runtime-tokio", "postgres"], optional = true }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres"], optional = true }
 
 [features]
 default = []
