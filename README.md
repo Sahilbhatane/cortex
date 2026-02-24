@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/cxlinux-ai/cx-core/actions">
-    <img src="https://github.com/cxlinux-ai/cx-core/actions/workflows/ci.yml/badge.svg" alt="Build Status" />
+  <a href="https://github.com/cxlinux-ai/cx-core/actions/workflows/cx-test.yml">
+    <img src="https://github.com/cxlinux-ai/cx-core/actions/workflows/cx-test.yml/badge.svg" alt="Build Status" />
   </a>
   <a href="https://github.com/cxlinux-ai/cx-core/releases">
     <img src="https://img.shields.io/badge/version-v0.3.2-brightgreen.svg" alt="Version" />

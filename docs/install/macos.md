@@ -1,68 +1,96 @@
-## Installing on macOS
+## Installing CX Terminal on macOS
 
-The CI system builds the package on macOS Big Sur and should run on systems as
-"old" as Mojave.  It may run on earlier versions of macOS, but that has not
-been tested.
+CX Terminal supports macOS 11 (Big Sur) and later, with native support for both Apple Silicon and Intel Macs.
 
-Starting with version 20210203-095643-70a364eb, WezTerm is a Universal binary
-with support for both Apple Silicon and Intel hardware.
+## Homebrew (Recommended)
 
-[:simple-apple: Download for macOS :material-tray-arrow-down:]({{ macos_zip_stable }}){ .md-button }
-[:simple-apple: Nightly for macOS :material-tray-arrow-down:]({{ macos_zip_nightly }}){ .md-button }
+The easiest way to install CX Terminal on macOS:
 
-1. Download <a href="{{ macos_zip_stable }}">Release</a>.
-2. Extract the zipfile and drag the `WezTerm.app` bundle to your `Applications` folder.
-3. First time around, you may need to right click and select `Open` to allow launching
-   the application that you've just downloaded from the internet.
-3. Subsequently, a simple double-click will launch the UI.
-4. To use wezterm binary from a terminal emulator, like `wezterm ls-fonts` you'll need to add the location to the wezterm binary folder that exists _inside_ the WezTerm.app, to your environment's $PATH value. For example, to add it to your `~/.zshrc` file, and assuming your WezTerm.app was installed to `/Applications`, add:
-```sh
-PATH="$PATH:/Applications/WezTerm.app/Contents/MacOS"
+```bash
+# Add the CX Linux tap
+brew tap cxlinux-ai/tap
+
+# Install CX Terminal
+brew install cx-terminal
+```
+
+To upgrade:
+```bash
+brew upgrade cx-terminal
+```
+
+## Manual Installation
+
+1. Download the latest release from [GitHub Releases](https://github.com/cxlinux-ai/cx-core/releases)
+2. Extract the `.zip` file
+3. Drag `CX-Terminal.app` to your `Applications` folder
+4. Right-click and select **Open** the first time (to bypass Gatekeeper)
+
+### Adding to PATH
+
+To use `cx-terminal` from your shell, add to your `~/.zshrc`:
+
+```bash
+PATH="$PATH:/Applications/CX-Terminal.app/Contents/MacOS"
 export PATH
 ```
-5. Configuration instructions can be [found here](../config/files.md)
 
-## Homebrew
+## Build from Source
 
-WezTerm is available for [brew](https://brew.sh/) users:
+### Prerequisites
 
-```console
-$ brew install --cask wezterm
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Install Homebrew dependencies
+brew install pkg-config fontconfig freetype openssl cmake
 ```
 
-If you'd like to use a nightly build:
+### Build
 
-```console
-$ brew install --cask wezterm@nightly
+```bash
+# Clone the repository
+git clone https://github.com/cxlinux-ai/cx-core.git
+cd cx-core
+
+# Build release binary
+cargo build --release
+
+# The binary will be at target/release/wezterm-gui
 ```
 
-!!! note
-    For users who have previously used the cask named `wezterm-nightly`,
-    homebrew has started issuing warnings: `Warning: Cask
-    homebrew/cask-versions/wezterm-nightly was renamed to wezterm@nightly`. We
-    recommend that you use `brew uninstall wezterm-nightly` to uninstall the
-    previously installed version, and then reinstall the new version using the
-    command above.
+### Create App Bundle
 
-to upgrade to a newer nightly (normal `brew upgrade` will not upgrade it!):
-
-```console
-$ brew upgrade --cask wezterm@nightly --no-quarantine --greedy-latest
+```bash
+# Build the macOS app bundle
+cargo build --release -p wezterm-gui
+./ci/macos-bundle.sh
 ```
 
-!!! note
-    The `--greedy-latest` option in Homebrew forces the latest version of a
-    formula to be installed, even if a version satisfying the formula's
-    requirements is already installed. This can be useful when you want to
-    ensure you have the most up-to-date version of a package, regardless of
-    whether an older version meets the current dependency requirements.
+The app bundle will be created in `target/release/`.
 
-## MacPorts
+## Verification
 
-WezTerm is also available via [MacPorts](https://ports.macports.org/port/wezterm/summary):
+```bash
+# Check version
+cx-terminal --version
 
-```console
-$ sudo port selfupdate
-$ sudo port install wezterm
+# Open from terminal
+open -a CX-Terminal
 ```
 
+## Troubleshooting
+
+### "CX-Terminal can't be opened" error
+
+If macOS blocks the app:
+1. Go to **System Preferences → Security & Privacy → General**
+2. Click **Open Anyway** next to the CX Terminal message
+
+### GPU Issues
+
+For graphics problems, try software rendering:
+```bash
+WGPU_BACKEND=gl /Applications/CX-Terminal.app/Contents/MacOS/cx-terminal
+```
