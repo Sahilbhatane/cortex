@@ -167,12 +167,32 @@ impl SubscriptionManager {
         &self,
         target_tier: SubscriptionTier,
     ) -> Result<CheckoutSession, StripeError> {
+        self.create_checkout_session_with_referral(target_tier, None, None).await
+    }
+
+    /// Create a Stripe checkout session with referral/promo code support
+    pub async fn create_checkout_session_with_referral(
+        &self,
+        target_tier: SubscriptionTier,
+        referral_code: Option<&str>,
+        promotion_code: Option<&str>,
+    ) -> Result<CheckoutSession, StripeError> {
         let client = self
             .stripe_client
             .as_ref()
             .ok_or(StripeError::NotConfigured)?;
 
-        client.create_checkout_session(target_tier).await
+        // Get customer email from current license if available
+        let customer_email = self.license.as_ref().map(|l| l.email.as_str());
+
+        client
+            .create_checkout_session_with_options(
+                target_tier,
+                referral_code,
+                promotion_code,
+                customer_email,
+            )
+            .await
     }
 
     /// Get Stripe customer portal URL
