@@ -29,7 +29,8 @@
       flake = false;
     };
     libpng = {
-      url = "github:pnggroup/libpng/v1.6.44";
+      # Must match submodule commit - needs 1.8.x for pngsimd.c and png_target_* APIs
+      url = "github:pnggroup/libpng/0094fdbf3743c238effb88aa92cf2a2ea23ade4a";
       flake = false;
     };
     zlib = {

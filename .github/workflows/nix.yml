@@ -33,5 +33,7 @@ jobs:
         with:
           flake-lock-path: ./nix/flake.lock
           ignore-missing-flake-lock: false
+      - name: Update flake lock
+        run: nix flake update --flake ./nix
       - name: Build default package
         run: nix build ./nix

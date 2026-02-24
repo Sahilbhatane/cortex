@@ -36,6 +36,8 @@ jobs:
         with:
           name: cx-terminal
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Update flake lock
+        run: nix flake update --flake ./nix
       - name: Build default package
         run: |
           nix build ./nix --json \
