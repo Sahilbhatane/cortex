@@ -434,15 +434,6 @@ impl UpgradePrompt {
             self.required_tier.display_name().to_lowercase()
         )
     }
-
-    /// Get the Stripe checkout URL with referral code
-    pub fn checkout_url_with_referral(&self, referral_code: &str) -> String {
-        format!(
-            "https://cxlinux.com/pricing/checkout?tier={}&ref={}",
-            self.required_tier.display_name().to_lowercase(),
-            referral_code
-        )
-    }
 }
 
 /// Helper macro for checking features

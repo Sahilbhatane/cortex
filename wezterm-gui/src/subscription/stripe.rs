@@ -184,17 +184,6 @@ impl StripeClient {
         &self,
         tier: SubscriptionTier,
     ) -> Result<CheckoutSession, super::StripeError> {
-        self.create_checkout_session_with_options(tier, None, None, None).await
-    }
-
-    /// Create a checkout session with full options including referral support
-    pub async fn create_checkout_session_with_options(
-        &self,
-        tier: SubscriptionTier,
-        referral_code: Option<&str>,
-        promotion_code: Option<&str>,
-        customer_email: Option<&str>,
-    ) -> Result<CheckoutSession, super::StripeError> {
         let price_id = tier
             .stripe_price_id_monthly()
             .ok_or_else(|| super::StripeError::ApiError("No price for this tier".into()))?;
@@ -205,29 +194,11 @@ impl StripeClient {
             ("cancel_url", self.config.cancel_url.clone()),
             ("line_items[0][price]", price_id.to_string()),
             ("line_items[0][quantity]", "1".to_string()),
-            // Allow users to enter promotion codes at checkout
-            ("allow_promotion_codes", "true".to_string()),
         ];
 
         // Add metadata
         params.push(("metadata[tier]", tier.display_name().to_string()));
         params.push(("metadata[source]", "cx-terminal".to_string()));
-
-        // Add referral code to metadata for tracking
-        if let Some(ref_code) = referral_code {
-            params.push(("metadata[referral_code]", ref_code.to_string()));
-            params.push(("client_reference_id", ref_code.to_string()));
-        }
-
-        // Pre-apply a Stripe promotion code if provided
-        if let Some(promo_code) = promotion_code {
-            params.push(("discounts[0][promotion_code]", promo_code.to_string()));
-        }
-
-        // Pre-fill customer email if known
-        if let Some(email) = customer_email {
-            params.push(("customer_email", email.to_string()));
-        }
 
         let response = self
             .client
