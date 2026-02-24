@@ -5,8 +5,9 @@
 //! ## Subscription Tiers
 //!
 //! - **Core (Free)**: Basic terminal with blocks, basic AI (3 agents), limited history
-//! - **Pro ($10/mo)**: All agents, custom AI, unlimited history, voice input, offline LLM
-//! - **Enterprise ($25/user/mo)**: SSO, audit logs, private agents, team management
+//! - **Pro ($20/mo)**: Up to 5 servers, all agents, custom AI, unlimited history, voice input
+//! - **Team ($99/mo)**: Up to 25 servers, cloud AI, team dashboard, audit logs
+//! - **Enterprise ($299/mo)**: Unlimited servers, SSO, private agents, priority support
 //!
 //! ## Architecture
 //!

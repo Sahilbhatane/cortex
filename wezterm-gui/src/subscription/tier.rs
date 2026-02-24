@@ -340,9 +340,9 @@ impl TierInfo {
         Self {
             tier: SubscriptionTier::Pro,
             name: "Pro",
-            description: "Unlimited systems for commercial use",
-            price: "$19/system",
-            systems: "Unlimited",
+            description: "Commercial use with up to 5 servers",
+            price: "$20/mo",
+            systems: "Up to 5 servers",
             highlights: vec![
                 "Everything in Core",
                 "Unlimited systems",
@@ -364,8 +364,8 @@ impl TierInfo {
             tier: SubscriptionTier::Team,
             name: "Team",
             description: "Cloud AI power for teams",
-            price: "$49/mo",
-            systems: "25 systems included",
+            price: "$99/mo",
+            systems: "Up to 25 servers",
             highlights: vec![
                 "Everything in Pro",
                 "Cloud LLM fallback",
@@ -382,8 +382,8 @@ impl TierInfo {
             tier: SubscriptionTier::Enterprise,
             name: "Enterprise",
             description: "Full compliance & dedicated support",
-            price: "$199/mo",
-            systems: "100 systems included",
+            price: "$299/mo",
+            systems: "Unlimited servers",
             highlights: vec![
                 "Everything in Team",
                 "SSO/SAML integration",
