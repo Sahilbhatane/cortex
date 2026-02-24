@@ -1,0 +1,44 @@
+name: APT Installation Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-apt-install:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: System Info
+        run: |
+          echo "=== System Info ==="
+          uname -a
+          cat /etc/os-release | grep PRETTY_NAME
+          dpkg --print-architecture
+          
+      - name: Add CX Linux Repository
+        run: |
+          echo "=== Adding CX Linux Repository ==="
+          curl -fsSL https://repo.cxlinux.com/key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/cxlinux.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/cxlinux.gpg] https://repo.cxlinux.com/apt stable main" | sudo tee /etc/apt/sources.list.d/cxlinux.list
+          sudo apt-get update
+          
+      - name: Check Package Info
+        run: |
+          echo "=== Package Info ==="
+          apt-cache policy cx-terminal
+          
+      - name: Dry Run Install
+        run: |
+          echo "=== Dry Run Install ==="
+          sudo apt-get install --dry-run cx-terminal
+          
+      - name: Actual Install
+        run: |
+          echo "=== Installing cx-terminal ==="
+          sudo apt-get install -y cx-terminal
+          
+      - name: Verify Installation
+        run: |
+          echo "=== Verification ==="
+          which cx-terminal || which wezterm
+          dpkg -l | grep cx-terminal
+          cx-terminal --version || wezterm --version || echo "Binary check"
