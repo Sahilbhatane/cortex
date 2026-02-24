@@ -227,11 +227,11 @@ impl TerminfoRenderer {
             if self.caps.hyperlinks() {
                 if let Some(link) = attr.hyperlink() {
                     let osc = OperatingSystemCommand::SetHyperlink(Some((**link).clone()));
-                    write!(out, "{}", osc)?;
+                    write!(out, "{osc}")?;
                 } else if self.current_attr.hyperlink().is_some() {
                     // Close out the old hyperlink
                     let osc = OperatingSystemCommand::SetHyperlink(None);
-                    write!(out, "{}", osc)?;
+                    write!(out, "{osc}")?;
                 }
             }
 
@@ -333,7 +333,7 @@ impl TerminfoRenderer {
         Ok(())
     }
 
-    #[allow(clippy::cyclomatic_complexity, clippy::cognitive_complexity)]
+    #[allow(clippy::cognitive_complexity, clippy::cognitive_complexity)]
     pub fn render_to<W: RenderTty + Write>(
         &mut self,
         changes: &[Change],
@@ -619,7 +619,7 @@ impl TerminfoRenderer {
                             Box::new(file),
                         ));
 
-                        write!(out, "{}", osc)?;
+                        write!(out, "{osc}")?;
 
                     // TODO: } else if self.caps.sixel() {
                     } else {
@@ -700,7 +700,7 @@ impl TerminfoRenderer {
 
                 Change::Title(text) => {
                     let osc = OperatingSystemCommand::SetWindowTitle(text.to_string());
-                    write!(out, "{}", osc)?;
+                    write!(out, "{osc}")?;
                 }
 
                 Change::LineAttribute(attr) => {
@@ -737,7 +737,7 @@ mod test {
     use crate::terminal::unix::{Purge, SetAttributeWhen, UnixTty};
     use crate::terminal::{cast, ScreenSize, Terminal, TerminalWaker};
     use libc::winsize;
-    use std::io::{Error as IoError, ErrorKind, Read, Result as IoResult, Write};
+    use std::io::{Error as IoError, Read, Result as IoResult, Write};
     use std::mem;
     use std::time::Duration;
     use terminfo;
@@ -793,17 +793,17 @@ mod test {
 
     impl UnixTty for FakeTty {
         fn get_size(&mut self) -> Result<winsize> {
-            Ok(self.size.clone())
+            Ok(self.size)
         }
         fn set_size(&mut self, size: winsize) -> Result<()> {
-            self.size = size.clone();
+            self.size = size;
             Ok(())
         }
         fn get_termios(&mut self) -> Result<Termios> {
-            Ok(self.termios.clone())
+            Ok(self.termios)
         }
         fn set_termios(&mut self, termios: &Termios, _when: SetAttributeWhen) -> Result<()> {
-            self.termios = termios.clone();
+            self.termios = *termios;
             Ok(())
         }
         /// Waits until all written data has been transmitted.
@@ -817,7 +817,7 @@ mod test {
 
     impl Read for FakeTty {
         fn read(&mut self, _buf: &mut [u8]) -> std::result::Result<usize, IoError> {
-            Err(IoError::new(ErrorKind::Other, "not implemented"))
+            Err(IoError::other("not implemented"))
         }
     }
     impl Write for FakeTty {
@@ -1265,7 +1265,7 @@ mod test {
             result,
             vec![
                 Action::CSI(CSI::Sgr(Sgr::Foreground(
-                    ColorSpec::TrueColor((255, 128, 64).into()).into(),
+                    ColorSpec::TrueColor((255, 128, 64).into()),
                 ))),
                 Action::Print('A'),
             ]
@@ -1288,7 +1288,7 @@ mod test {
             result,
             vec![
                 Action::CSI(CSI::Sgr(Sgr::Foreground(
-                    ColorSpec::TrueColor((255, 128, 64).into()).into(),
+                    ColorSpec::TrueColor((255, 128, 64).into()),
                 ))),
                 Action::Print('A'),
             ]

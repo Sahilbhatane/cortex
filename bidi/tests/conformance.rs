@@ -25,7 +25,7 @@ fn class_by_name(s: &str) -> BidiClass {
         "RLO" => BidiClass::RightToLeftOverride,
         "S" => BidiClass::SegmentSeparator,
         "WS" => BidiClass::WhiteSpace,
-        bad => panic!("invalid BidiClass {}", bad),
+        bad => panic!("invalid BidiClass {bad}"),
     }
 }
 
@@ -86,7 +86,7 @@ fn bidi_character_test() {
         }
 
         log::debug!("BidiCharacterTest.txt:{}", line_number + 1);
-        log::debug!("{:?}", codepoints);
+        log::debug!("{codepoints:?}");
 
         context.resolve_paragraph(
             &codepoints,
@@ -94,7 +94,7 @@ fn bidi_character_test() {
                 0 => ParagraphDirectionHint::LeftToRight,
                 1 => ParagraphDirectionHint::RightToLeft,
                 2 => ParagraphDirectionHint::AutoLeftToRight,
-                _ => panic!("invalid direction code {}", direction),
+                _ => panic!("invalid direction code {direction}"),
             },
         );
 
@@ -120,7 +120,7 @@ fn bidi_character_test() {
                 codepoints,
                 levels
             );
-            log::error!("     levels={:?}", resolved_levels);
+            log::error!("     levels={resolved_levels:?}");
             level_fails += 1;
         } else {
             level_passes += 1;
@@ -139,16 +139,15 @@ fn bidi_character_test() {
         }
 
         if reorder_fails + level_fails + para_fails > 0 {
-            log::error!("{:#?}", context);
+            log::error!("{context:#?}");
             break;
         }
     }
 
-    println!("level_passes={} level_fails={}", level_passes, level_fails);
-    println!("para_passes={} para_fails={}", para_passes, para_fails);
+    println!("level_passes={level_passes} level_fails={level_fails}");
+    println!("para_passes={para_passes} para_fails={para_fails}");
     println!(
-        "reorder_passes={} reorder_fails={}",
-        reorder_passes, reorder_fails
+        "reorder_passes={reorder_passes} reorder_fails={reorder_fails}"
     );
     assert_eq!(level_fails + para_fails + reorder_fails, 0);
     assert_eq!(level_passes, 91707);
@@ -235,8 +234,8 @@ fn bidi_test() {
                     );
                     printed_summary = true;
                 }
-                log::error!("   {:?} levels={:?}", dir, resolved_levels);
-                log::error!("{:#?}", context);
+                log::error!("   {dir:?} levels={resolved_levels:?}");
+                log::error!("{context:#?}");
                 level_fails += 1;
             } else {
                 level_passes += 1;
@@ -263,10 +262,9 @@ fn bidi_test() {
         }
     }
 
-    println!("levels: {} passed, {} failed", level_passes, level_fails);
+    println!("levels: {level_passes} passed, {level_fails} failed");
     println!(
-        "reorders: {} passed, {} failed",
-        reorder_passes, reorder_fails
+        "reorders: {reorder_passes} passed, {reorder_fails} failed"
     );
 
     assert_eq!(level_fails, 0);

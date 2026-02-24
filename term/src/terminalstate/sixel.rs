@@ -11,7 +11,7 @@ impl TerminalState {
         let (width, height) = sixel.dimensions();
 
         if let Err(err) = check_image_dimensions(width, height) {
-            log::error!("{}", err);
+            log::error!("{err}");
             return;
         }
 
@@ -104,7 +104,7 @@ impl TerminalState {
 
                 SixelData::SelectColorMapEntry(n) => {
                     foreground_color = color_map.get(n).cloned().unwrap_or_else(|| {
-                        log::error!("sixel selected noexistent colormap entry {}", n);
+                        log::error!("sixel selected noexistent colormap entry {n}");
                         RgbColor::new_8bpc(255, 255, 255)
                     });
                 }
@@ -147,7 +147,7 @@ impl TerminalState {
             placement_id: None,
             do_not_move_cursor: self.sixel_display_mode,
         }) {
-            log::error!("set sixel image: {:#}", err);
+            log::error!("set sixel image: {err:#}");
         }
         if self.sixel_display_mode {
             self.cursor = old_cursor;

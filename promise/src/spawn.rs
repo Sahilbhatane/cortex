@@ -187,6 +187,12 @@ pub struct SimpleExecutor {
     rx: Receiver<SpawnFunc>,
 }
 
+impl Default for SimpleExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SimpleExecutor {
     pub fn new() -> Self {
         let (tx, rx) = unbounded();
@@ -217,13 +223,19 @@ impl SimpleExecutor {
     pub fn tick(&self) -> anyhow::Result<()> {
         match self.rx.recv() {
             Ok(func) => func(),
-            Err(err) => anyhow::bail!("while waiting for events: {:?}", err),
+            Err(err) => anyhow::bail!("while waiting for events: {err:?}"),
         };
         Ok(())
     }
 }
 
 pub struct ScopedExecutor {}
+
+impl Default for ScopedExecutor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ScopedExecutor {
     pub fn new() -> Self {

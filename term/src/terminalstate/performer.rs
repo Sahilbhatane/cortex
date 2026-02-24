@@ -45,7 +45,7 @@ impl<'a> Deref for Performer<'a> {
 
 impl<'a> DerefMut for Performer<'a> {
     fn deref_mut(&mut self) -> &mut TerminalState {
-        &mut self.state
+        self.state
     }
 }
 
@@ -156,7 +156,7 @@ impl<'a> Performer<'a> {
                     // Ensure that White_Space shows as a space
                     print_width = 1;
                 } else {
-                    log::trace!("Eliding zero-width grapheme {:?}", g);
+                    log::trace!("Eliding zero-width grapheme {g:?}");
                     continue;
                 }
             }
@@ -205,7 +205,7 @@ impl<'a> Performer<'a> {
             if self.insert {
                 let margin = self.left_and_right_margins.end;
                 let screen = self.screen_mut();
-                for _ in x..x + print_width as usize {
+                for _ in x..x + print_width {
                     screen.insert_cell(x, y, margin, seqno);
                 }
             }
@@ -385,19 +385,13 @@ impl<'a> Performer<'a> {
     }
 
     pub fn perform(&mut self, action: Action) {
-        debug!("perform {:?}", action);
+        debug!("perform {action:?}");
         if self.suppress_initial_title_change {
-            match &action {
-                Action::OperatingSystemCommand(osc) => match **osc {
-                    OperatingSystemCommand::SetIconNameAndWindowTitle(_) => {
-                        debug!("suppressed {:?}", osc);
-                        self.suppress_initial_title_change = false;
-                        return;
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
+            if let Action::OperatingSystemCommand(osc) = &action { if let OperatingSystemCommand::SetIconNameAndWindowTitle(_) = **osc {
+                debug!("suppressed {osc:?}");
+                self.suppress_initial_title_change = false;
+                return;
+            } }
         }
         match action {
             Action::Print(c) => self.print(c),
@@ -416,7 +410,7 @@ impl<'a> Performer<'a> {
             Action::KittyImage(img) => {
                 self.flush_print();
                 if let Err(err) = self.kitty_img(*img) {
-                    log::error!("kitty_img: {:#}", err);
+                    log::error!("kitty_img: {err:#}");
                 }
             }
         }
@@ -435,13 +429,13 @@ impl<'a> Performer<'a> {
                         // but note that *that* text has the validity value
                         // inverted; there's a note about this in the xterm
                         // ctlseqs docs.
-                        match s.data.as_slice() {
-                            &[b'"', b'p'] => {
+                        match *s.data.as_slice() {
+                            [b'"', b'p'] => {
                                 // DECSCL - select conformance level
-                                write!(self.writer, "{}1$r65;1\"p{}", DCS, ST).ok();
+                                write!(self.writer, "{DCS}1$r65;1\"p{ST}").ok();
                                 self.writer.flush().ok();
                             }
-                            &[b'r'] => {
+                            [b'r'] => {
                                 // DECSTBM - top and bottom margins
                                 let margins = self.top_and_bottom_margins.clone();
                                 write!(
@@ -455,7 +449,7 @@ impl<'a> Performer<'a> {
                                 .ok();
                                 self.writer.flush().ok();
                             }
-                            &[b's'] => {
+                            [b's'] => {
                                 // DECSLRM - left and right margins
                                 let margins = self.left_and_right_margins.clone();
                                 write!(
@@ -471,17 +465,17 @@ impl<'a> Performer<'a> {
                             }
                             _ => {
                                 if self.config.log_unknown_escape_sequences() {
-                                    log::warn!("unhandled DECRQSS {:?}", s);
+                                    log::warn!("unhandled DECRQSS {s:?}");
                                 }
                                 // Reply that the request is invalid
-                                write!(self.writer, "{}0$r{}", DCS, ST).ok();
+                                write!(self.writer, "{DCS}0$r{ST}").ok();
                                 self.writer.flush().ok();
                             }
                         }
                     }
                     _ => {
                         if self.config.log_unknown_escape_sequences() {
-                            log::warn!("unhandled {:?}", s);
+                            log::warn!("unhandled {s:?}");
                         }
                     }
                 }
@@ -490,7 +484,7 @@ impl<'a> Performer<'a> {
                 Some(handler) => handler.handle_device_control(ctrl),
                 None => {
                     if self.config.log_unknown_escape_sequences() {
-                        log::warn!("unhandled {:?}", ctrl);
+                        log::warn!("unhandled {ctrl:?}");
                     }
                 }
             },
@@ -607,8 +601,8 @@ impl<'a> Performer<'a> {
 
             ControlCode::Enquiry => {
                 let response = self.config.enq_answerback();
-                if response.len() > 0 {
-                    write!(self.writer, "{}", response).ok();
+                if !response.is_empty() {
+                    write!(self.writer, "{response}").ok();
                     self.writer.flush().ok();
                 }
             }
@@ -617,7 +611,7 @@ impl<'a> Performer<'a> {
 
             _ => {
                 if self.config.log_unknown_escape_sequences() {
-                    log::warn!("unhandled ControlCode {:?}", control);
+                    log::warn!("unhandled ControlCode {control:?}");
                 }
             }
         }
@@ -640,7 +634,7 @@ impl<'a> Performer<'a> {
             CSI::Edit(edit) => self.state.perform_csi_edit(edit),
             CSI::Mode(mode) => self.state.perform_csi_mode(mode),
             CSI::Device(dev) => self.state.perform_device(*dev),
-            CSI::Mouse(mouse) => error!("mouse report sent by app? {:?}", mouse),
+            CSI::Mouse(mouse) => error!("mouse report sent by app? {mouse:?}"),
             CSI::Window(window) => self.state.perform_csi_window(*window),
             CSI::SelectCharacterPath(CharacterPath::ImplementationDefault, _) => {
                 self.state.bidi_hint.take();
@@ -863,7 +857,7 @@ impl<'a> Performer<'a> {
 
             _ => {
                 if self.config.log_unknown_escape_sequences() {
-                    log::warn!("ESC: unhandled {:?}", esc);
+                    log::warn!("ESC: unhandled {esc:?}");
                 }
             }
         }
@@ -917,7 +911,7 @@ impl<'a> Performer<'a> {
                     for item in unspec {
                         write!(&mut output, " {}", String::from_utf8_lossy(&item)).ok();
                     }
-                    log::warn!("{}", output);
+                    log::warn!("{output}");
                 }
             }
 
@@ -930,7 +924,7 @@ impl<'a> Performer<'a> {
                 let selection = selection_to_selection(selection);
                 match self.set_clipboard_contents(selection, Some(selection_data)) {
                     Ok(_) => (),
-                    Err(err) => error!("failed to set clipboard in response to OSC 52: {:#?}", err),
+                    Err(err) => error!("failed to set clipboard in response to OSC 52: {err:#?}"),
                 }
             }
             OperatingSystemCommand::ITermProprietary(iterm) => match iterm {
@@ -962,7 +956,7 @@ impl<'a> Performer<'a> {
                             },
                         },
                     );
-                    write!(self.writer, "{}", response).ok();
+                    write!(self.writer, "{response}").ok();
                     self.writer.flush().ok();
                 }
                 ITermProprietary::File(image) => self.set_image(*image),
@@ -995,7 +989,7 @@ impl<'a> Performer<'a> {
                 }
                 _ => {
                     if self.config.log_unknown_escape_sequences() {
-                        log::warn!("unhandled iterm2: {:?}", iterm);
+                        log::warn!("unhandled iterm2: {iterm:?}");
                     }
                 }
             },
@@ -1021,12 +1015,12 @@ impl<'a> Performer<'a> {
                 self.pen.set_semantic_type(SemanticType::Prompt);
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
-                FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilNextMarker { .. },
+                FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilNextMarker,
             ) => {
                 self.pen.set_semantic_type(SemanticType::Input);
             }
             OperatingSystemCommand::FinalTermSemanticPrompt(
-                FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilEndOfLine { .. },
+                FinalTermSemanticPrompt::MarkEndOfPromptAndStartOfInputUntilEndOfLine,
             ) => {
                 self.pen.set_semantic_type(SemanticType::Input);
                 self.clear_semantic_attribute_on_newline = true;
@@ -1049,18 +1043,18 @@ impl<'a> Performer<'a> {
                         focus: true,
                     });
                 } else {
-                    log::info!("Application sends SystemNotification: {}", message);
+                    log::info!("Application sends SystemNotification: {message}");
                 }
             }
             OperatingSystemCommand::RxvtExtension(params) => {
-                if let Some("notify") = params.get(0).map(String::as_str) {
+                if let Some("notify") = params.first().map(String::as_str) {
                     let title = params.get(1);
                     let body = params.get(2);
                     let (title, body) = match (title.cloned(), body.cloned()) {
                         (Some(title), None) => (None, title),
                         (Some(title), Some(body)) => (Some(title), body),
                         _ => {
-                            log::warn!("malformed rxvt notify escape: {:?}", params);
+                            log::warn!("malformed rxvt notify escape: {params:?}");
                             return;
                         }
                     };
@@ -1080,7 +1074,7 @@ impl<'a> Performer<'a> {
                 }
             }
             OperatingSystemCommand::ChangeColorNumber(specs) => {
-                log::trace!("ChangeColorNumber: {:?}", specs);
+                log::trace!("ChangeColorNumber: {specs:?}");
                 for pair in specs {
                     match pair.color {
                         ColorOrQuery::Query => {
@@ -1091,7 +1085,7 @@ impl<'a> Performer<'a> {
                                         self.palette().colors.0[pair.palette_index as usize],
                                     ),
                                 }]);
-                            write!(self.writer, "{}", response).ok();
+                            write!(self.writer, "{response}").ok();
                             self.writer.flush().ok();
                         }
                         ColorOrQuery::Color(c) => {
@@ -1104,7 +1098,7 @@ impl<'a> Performer<'a> {
             }
 
             OperatingSystemCommand::ResetColors(colors) => {
-                log::trace!("ResetColors: {:?}", colors);
+                log::trace!("ResetColors: {colors:?}");
                 if colors.is_empty() {
                     // Reset all colors
                     self.palette.take();
@@ -1125,12 +1119,12 @@ impl<'a> Performer<'a> {
             }
 
             OperatingSystemCommand::ChangeDynamicColors(first_color, colors) => {
-                log::trace!("ChangeDynamicColors: {:?} {:?}", first_color, colors);
+                log::trace!("ChangeDynamicColors: {first_color:?} {colors:?}");
                 use wezterm_escape_parser::osc::DynamicColorNumber;
                 let mut idx: u8 = first_color as u8;
                 for color in colors {
                     let which_color: Option<DynamicColorNumber> = FromPrimitive::from_u8(idx);
-                    log::trace!("ChangeDynamicColors item: {:?}", which_color);
+                    log::trace!("ChangeDynamicColors item: {which_color:?}");
                     if let Some(which_color) = which_color {
                         macro_rules! set_or_query {
                             ($name:ident) => {
@@ -1156,7 +1150,7 @@ impl<'a> Performer<'a> {
                                     // We set the border to the background color; we don't
                                     // have an escape that sets that independently, and this
                                     // way just looks better.
-                                    self.palette_mut().cursor_border = c.into();
+                                    self.palette_mut().cursor_border = c;
                                 }
                                 set_or_query!(cursor_bg)
                             }
@@ -1180,7 +1174,7 @@ impl<'a> Performer<'a> {
             }
 
             OperatingSystemCommand::ResetDynamicColor(color) => {
-                log::trace!("ResetDynamicColor: {:?}", color);
+                log::trace!("ResetDynamicColor: {color:?}");
                 use wezterm_escape_parser::osc::DynamicColorNumber;
                 let which_color: Option<DynamicColorNumber> = FromPrimitive::from_u8(color as u8);
                 if let Some(which_color) = which_color {

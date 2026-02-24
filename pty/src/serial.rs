@@ -150,7 +150,7 @@ impl Child for SerialChild {
 
             let port = &self.port;
             if let Err(err) = port.read_cd() {
-                log::error!("Error reading carrier detect: {:#}", err);
+                log::error!("Error reading carrier detect: {err:#}");
                 return Ok(ExitStatus::with_exit_code(1));
             }
         }
@@ -296,7 +296,7 @@ impl Read for Reader {
                     if e.kind() == std::io::ErrorKind::WouldBlock {
                         continue;
                     }
-                    log::error!("serial read error: {}", e);
+                    log::error!("serial read error: {e}");
                     return Err(e);
                 }
             }

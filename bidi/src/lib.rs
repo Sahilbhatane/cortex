@@ -110,7 +110,7 @@ impl BidiRun {
             type Item = usize;
             fn next(&mut self) -> Option<usize> {
                 for idx in self.range.by_ref() {
-                    if self.removed_by_x9.iter().any(|&i| i == idx) {
+                    if self.removed_by_x9.contains(&idx) {
                         // Skip it
                         continue;
                     }
@@ -504,7 +504,7 @@ impl BidiContext {
     }
 
     fn dump_state(&self, label: &str) {
-        trace!("State: {}", label);
+        trace!("State: {label}");
         trace!("BidiClass: {:?}", self.char_types);
         trace!("Levels: {:?}", self.levels);
         trace!("");
@@ -817,14 +817,14 @@ impl BidiContext {
                     trace!("ridx={} cidx={} {:?} bracket", ridx, cidx, paragraph[cidx]);
                     if self.char_types[cidx] == BidiClass::OtherNeutral {
                         if bpt == BracketType::Open {
-                            trace!("push open ridx={}", ridx);
+                            trace!("push open ridx={ridx}");
                             if !stack.push(closing_bracket, ridx) {
                                 // Stack overflow: halt processing
                                 return;
                             }
                         } else {
                             // a closing bracket
-                            trace!("close at ridx={}, search for opener", ridx);
+                            trace!("close at ridx={ridx}, search for opener");
                             stack.seek_matching_open_bracket(paragraph[cidx], ridx);
                         }
                     }
@@ -849,7 +849,7 @@ impl BidiContext {
                 // of the substring in this isolating run sequence
                 // enclosed by those brackets (inclusive
                 // of the brackets). Resolve that individual pair.
-                self.resolve_one_pair(pair, &iso_run);
+                self.resolve_one_pair(pair, iso_run);
             }
         }
     }
@@ -959,7 +959,7 @@ impl BidiContext {
         // which matches the embedding direction, then set the type of both
         // brackets to match the embedding direction, too.
         if pair.opening_pos < pair.closing_pos.saturating_sub(1) {
-            trace!("pair: {:?}", pair);
+            trace!("pair: {pair:?}");
             for &cidx in &iso_run.indices[pair.opening_pos + 1..pair.closing_pos] {
                 let direction = match self.char_types[cidx] {
                     BidiClass::RightToLeft
@@ -1003,7 +1003,6 @@ impl BidiContext {
                     &self.orig_char_types,
                     &self.levels,
                 );
-                return;
             } else {
                 // No strong type matching the oppositedirection was found either
                 // before or after these brackets in this text chain. Resolve the
@@ -1016,7 +1015,6 @@ impl BidiContext {
                     &self.orig_char_types,
                     &self.levels,
                 );
-                return;
             }
         } else {
             // No strong type was found between the brackets. Leave
@@ -1076,8 +1074,7 @@ impl BidiContext {
     fn is_prior_context_left(&self, index_idx: usize, indices: &[usize], sot: BidiClass) -> bool {
         if index_idx == 0 {
             trace!(
-                "is_prior_context_left: short circuit because index_idx=0. sot is {:?}",
-                sot
+                "is_prior_context_left: short circuit because index_idx=0. sot is {sot:?}"
             );
             return sot == BidiClass::LeftToRight;
         }
@@ -1116,7 +1113,7 @@ impl BidiContext {
         );
         for &idx in &indices[index_idx + 1..] {
             if self.char_types[idx] == BidiClass::LeftToRight {
-                trace!("is_following_context_left true because idx={} is left", idx);
+                trace!("is_following_context_left true because idx={idx} is left");
                 return true;
             }
             if self.levels[idx].removed_by_x9() {
@@ -1128,8 +1125,7 @@ impl BidiContext {
             return false;
         }
         trace!(
-            "is_following_context_left fall through to bottom, check against eot={:?}",
-            eot
+            "is_following_context_left fall through to bottom, check against eot={eot:?}"
         );
         eot == BidiClass::LeftToRight
     }
@@ -1335,7 +1331,7 @@ impl BidiContext {
         // and override status
         for idx in 0..len {
             let bc = self.char_types[idx];
-            trace!("Considering idx={} {:?}", idx, bc);
+            trace!("Considering idx={idx} {bc:?}");
             match bc {
                 // X2
                 BidiClass::RightToLeftEmbedding => {
@@ -1464,12 +1460,9 @@ impl BidiContext {
                         // Do nothing
                     } else if overflow_embedding > 0 {
                         overflow_embedding -= 1;
-                    } else {
-                        if !stack.isolate_status() {
-                            if stack.depth() >= 2 {
-                                stack.pop();
-                            }
-                        }
+                    } else if !stack.isolate_status()
+                    && stack.depth() >= 2 {
+                        stack.pop();
                     }
                 }
                 BidiClass::BoundaryNeutral => {}
@@ -1715,22 +1708,22 @@ impl BidiContext {
 
 impl BidiClass {
     pub fn is_iso_init(self) -> bool {
-        match self {
+        matches!(
+            self,
             BidiClass::RightToLeftIsolate
-            | BidiClass::LeftToRightIsolate
-            | BidiClass::FirstStrongIsolate => true,
-            _ => false,
-        }
+                | BidiClass::LeftToRightIsolate
+                | BidiClass::FirstStrongIsolate
+        )
     }
 
     pub fn is_iso_control(self) -> bool {
-        match self {
+        matches!(
+            self,
             BidiClass::RightToLeftIsolate
-            | BidiClass::LeftToRightIsolate
-            | BidiClass::PopDirectionalIsolate
-            | BidiClass::FirstStrongIsolate => true,
-            _ => false,
-        }
+                | BidiClass::LeftToRightIsolate
+                | BidiClass::PopDirectionalIsolate
+                | BidiClass::FirstStrongIsolate
+        )
     }
 
     pub fn is_neutral(self) -> bool {
@@ -1802,10 +1795,7 @@ fn span_one_run(types: &[BidiClass], levels: &[Level], start: usize) -> (Level, 
     let mut span_len = 0;
 
     trace!(
-        "span_one_run called with types: {:?}, levels: {:?}, start={}",
-        types,
-        levels,
-        start
+        "span_one_run called with types: {types:?}, levels: {levels:?}, start={start}"
     );
 
     for (idx, (bc, level)) in types
@@ -1815,10 +1805,7 @@ fn span_one_run(types: &[BidiClass], levels: &[Level], start: usize) -> (Level, 
         .enumerate()
     {
         trace!(
-            "span_one_run: consider idx={} bc={:?} level={:?}",
-            idx,
-            bc,
-            level
+            "span_one_run: consider idx={idx} bc={bc:?} level={level:?}"
         );
         if !level.removed_by_x9() {
             if bc.is_iso_init() {
@@ -1947,13 +1934,10 @@ impl BracketStack {
     /// opening bracket to match it. Just discard and move on.
     pub fn seek_matching_open_bracket(&mut self, closing_bracket: char, pos: usize) -> bool {
         trace!(
-            "seek_matching_open_bracket: closing_bracket={:?} pos={}\n{:?}",
-            closing_bracket,
-            pos,
-            self
+            "seek_matching_open_bracket: closing_bracket={closing_bracket:?} pos={pos}\n{self:?}"
         );
         for depth in (0..self.depth).rev() {
-            trace!("seek_matching_open_bracket: consider depth={}", depth);
+            trace!("seek_matching_open_bracket: consider depth={depth}");
             // The basic test is for the closingcp equal to the bpb value
             // stored in the bracketData. But to account for the canonical
             // equivalences for U+2329 and U+232A, tack on extra checks here

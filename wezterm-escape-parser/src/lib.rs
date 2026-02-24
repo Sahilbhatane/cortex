@@ -102,8 +102,8 @@ fn action_size() {
 impl Display for Action {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match self {
-            Action::Print(c) => write!(f, "{}", c),
-            Action::PrintString(s) => write!(f, "{}", s),
+            Action::Print(c) => write!(f, "{c}"),
+            Action::PrintString(s) => write!(f, "{s}"),
             Action::Control(c) => f.write_char(*c as u8 as char),
             Action::DeviceControl(c) => c.fmt(f),
             Action::OperatingSystemCommand(osc) => osc.fmt(f),
@@ -117,7 +117,7 @@ impl Display for Action {
                         write!(f, ";")?;
                     }
                     for &b in name.as_bytes() {
-                        write!(f, "{:x}", b)?;
+                        write!(f, "{b:x}")?;
                     }
                 }
 
@@ -176,7 +176,7 @@ impl Display for ShortDeviceControl {
             if idx > 0 {
                 write!(f, ";")?;
             }
-            write!(f, "{}", p)?;
+            write!(f, "{p}")?;
         }
         for b in &self.intermediates {
             f.write_char(*b as char)?;
@@ -246,7 +246,7 @@ impl Display for DeviceControlMode {
                     if idx > 0 {
                         write!(f, ";")?;
                     }
-                    write!(f, "{}", p)?;
+                    write!(f, "{p}")?;
                 }
                 for b in &mode.intermediates {
                     f.write_char(*b as char)?;
@@ -267,10 +267,10 @@ impl Display for DeviceControlMode {
 impl core::fmt::Debug for DeviceControlMode {
     fn fmt(&self, fmt: &mut Formatter) -> FmtResult {
         match self {
-            Self::Enter(mode) => write!(fmt, "Enter({:?})", mode),
+            Self::Enter(mode) => write!(fmt, "Enter({mode:?})"),
             Self::Exit => write!(fmt, "Exit"),
             Self::Data(b) => write!(fmt, "Data({:?} 0x{:x})", *b as char, *b),
-            Self::ShortDeviceControl(s) => write!(fmt, "ShortDeviceControl({:?})", s),
+            Self::ShortDeviceControl(s) => write!(fmt, "ShortDeviceControl({s:?})"),
             #[cfg(feature = "tmux_cc")]
             Self::TmuxEvents(_) => write!(fmt, "tmux event"),
         }
@@ -356,7 +356,7 @@ impl Display for Sixel {
                 "\x1bP;{}{}q\"{};{};{};{}",
                 if self.background_is_transparent { 1 } else { 0 },
                 match self.horizontal_grid_size {
-                    Some(h) => format!(";{}", h),
+                    Some(h) => format!(";{h}"),
                     None => "".to_string(),
                 },
                 self.pan,
@@ -374,13 +374,13 @@ impl Display for Sixel {
                     (3, 1) => 3,
                     (1, 1) => 7,
                     _ => {
-                        log::error!("bad pad/pan combo: {:?}", self);
+                        log::error!("bad pad/pan combo: {self:?}");
                         return Err(core::fmt::Error);
                     }
                 },
                 if self.background_is_transparent { 1 } else { 0 },
                 match self.horizontal_grid_size {
-                    Some(h) => format!(";{}", h),
+                    Some(h) => format!(";{h}"),
                     None => "".to_string(),
                 },
             )?;
@@ -462,10 +462,9 @@ impl Display for SixelData {
                 saturation,
             } => write!(
                 f,
-                "#{};1;{};{};{}",
-                color_number, hue_angle, lightness, saturation
+                "#{color_number};1;{hue_angle};{lightness};{saturation}"
             ),
-            Self::SelectColorMapEntry(n) => write!(f, "#{}", n),
+            Self::SelectColorMapEntry(n) => write!(f, "#{n}"),
             Self::CarriageReturn => write!(f, "$"),
             Self::NewLine => write!(f, "-"),
         }

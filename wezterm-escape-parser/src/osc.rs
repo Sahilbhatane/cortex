@@ -159,9 +159,7 @@ impl OperatingSystemCommand {
                 vec.push(slice.to_vec());
             }
             log::trace!(
-                "OSC internal parse err: {}, track as Unspecified {:?}",
-                err,
-                vec
+                "OSC internal parse err: {err}, track as Unspecified {vec:?}"
             );
             OperatingSystemCommand::Unspecified(vec)
         })
@@ -187,7 +185,7 @@ impl OperatingSystemCommand {
         let mut iter = osc.iter();
         iter.next(); // skip the command word that we already know is present
 
-        while let Some(index) = iter.next() {
+        for index in iter {
             if index.is_empty() {
                 continue;
             }
@@ -211,7 +209,7 @@ impl OperatingSystemCommand {
             } else {
                 ColorOrQuery::Color(
                     SrgbaTuple::from_str(spec)
-                        .map_err(|()| format!("invalid color spec {:?}", spec))?,
+                        .map_err(|()| format!("invalid color spec {spec:?}"))?,
                 )
             };
 
@@ -226,14 +224,14 @@ impl OperatingSystemCommand {
 
     fn parse_reset_dynamic_color_number(idx: u8) -> Result<Self> {
         let which_color: DynamicColorNumber = FromPrimitive::from_u8(idx)
-            .ok_or_else(|| format!("osc code is not a valid DynamicColorNumber!?"))?;
+            .ok_or_else(|| "osc code is not a valid DynamicColorNumber!?".to_string())?;
 
         Ok(OperatingSystemCommand::ResetDynamicColor(which_color))
     }
 
     fn parse_change_dynamic_color_number(idx: u8, osc: &[&[u8]]) -> Result<Self> {
         let which_color: DynamicColorNumber = FromPrimitive::from_u8(idx)
-            .ok_or_else(|| format!("osc code is not a valid DynamicColorNumber!?"))?;
+            .ok_or_else(|| "osc code is not a valid DynamicColorNumber!?".to_string())?;
         let mut colors = vec![];
         for spec in osc.iter().skip(1) {
             if spec == b"?" {
@@ -242,7 +240,7 @@ impl OperatingSystemCommand {
                 let spec = str::from_utf8(spec)?;
                 colors.push(ColorOrQuery::Color(
                     SrgbaTuple::from_str(spec)
-                        .map_err(|()| format!("invalid color spec {:?}", spec))?,
+                        .map_err(|()| format!("invalid color spec {spec:?}"))?,
                 ));
             }
         }
@@ -275,7 +273,7 @@ impl OperatingSystemCommand {
         } else {
             OperatingSystemCommandCode::from_code(&p1str)
         }
-        .ok_or_else(|| format!("unknown code"))?;
+        .ok_or_else(|| "unknown code".to_string())?;
 
         macro_rules! single_string {
             ($variant:ident) => {{
@@ -319,7 +317,7 @@ impl OperatingSystemCommand {
                 if osc.len() >= 3 && osc[1] == b"4" {
                     fn get_pct(v: &&[u8]) -> u8 {
                         let number = str::from_utf8(v).unwrap_or("0");
-                        number.parse::<u8>().unwrap_or(0).max(0).min(100)
+                        number.parse::<u8>().unwrap_or(0).min(100)
                     }
                     match osc[2] {
                         b"0" => return Ok(OperatingSystemCommand::ConEmuProgress(Progress::None)),
@@ -577,16 +575,16 @@ impl Display for OperatingSystemCommand {
                     f.write_str(&String::from_utf8_lossy(item))?;
                 }
             }
-            ClearSelection(s) => write!(f, "52;{}", s)?,
-            QuerySelection(s) => write!(f, "52;{};?", s)?,
+            ClearSelection(s) => write!(f, "52;{s}")?,
+            QuerySelection(s) => write!(f, "52;{s};?")?,
             SetSelection(s, val) => write!(f, "52;{};{}", s, base64_encode(val))?,
-            SystemNotification(s) => write!(f, "9;{}", s)?,
+            SystemNotification(s) => write!(f, "9;{s}")?,
             ITermProprietary(i) => i.fmt(f)?,
             FinalTermSemanticPrompt(i) => i.fmt(f)?,
             ResetColors(colors) => {
                 write!(f, "104")?;
                 for c in colors {
-                    write!(f, ";{}", c)?;
+                    write!(f, ";{c}")?;
                 }
             }
             ChangeColorNumber(specs) => {
@@ -598,13 +596,13 @@ impl Display for OperatingSystemCommand {
             ChangeDynamicColors(first_color, colors) => {
                 write!(f, "{}", *first_color as u8)?;
                 for color in colors {
-                    write!(f, ";{}", color)?
+                    write!(f, ";{color}")?
                 }
             }
             ResetDynamicColor(color) => {
                 write!(f, "{}", 100 + *color as u8)?;
             }
-            CurrentWorkingDirectory(s) => write!(f, "7;{}", s)?,
+            CurrentWorkingDirectory(s) => write!(f, "7;{s}")?,
             ConEmuProgress(Progress::None) => write!(f, "9;4;0")?,
             ConEmuProgress(Progress::SetPercentage(pct)) => write!(f, "9;4;1;{pct}")?,
             ConEmuProgress(Progress::SetError(pct)) => write!(f, "9;4;2;{pct}")?,
@@ -791,7 +789,7 @@ impl FinalTermSemanticPrompt {
         }
 
         if param == "D" {
-            let status = match osc.get(2).map(|&p| p) {
+            let status = match osc.get(2).copied() {
                 Some(s) => match str::from_utf8(s) {
                     Ok(s) => s.parse().unwrap_or(0),
                     _ => 0,
@@ -838,40 +836,40 @@ impl Display for FinalTermSemanticPrompt {
             Self::FreshLineAndStartPrompt { aid, cl } => {
                 write!(f, "A")?;
                 if let Some(aid) = aid {
-                    write!(f, ";aid={}", aid)?;
+                    write!(f, ";aid={aid}")?;
                 }
                 if let Some(cl) = cl {
-                    write!(f, ";cl={}", cl)?;
+                    write!(f, ";cl={cl}")?;
                 }
             }
             Self::MarkEndOfCommandWithFreshLine { aid, cl } => {
                 write!(f, "N")?;
                 if let Some(aid) = aid {
-                    write!(f, ";aid={}", aid)?;
+                    write!(f, ";aid={aid}")?;
                 }
                 if let Some(cl) = cl {
-                    write!(f, ";cl={}", cl)?;
+                    write!(f, ";cl={cl}")?;
                 }
             }
             Self::StartPrompt(kind) => {
-                write!(f, "P;k={}", kind)?;
+                write!(f, "P;k={kind}")?;
             }
             Self::MarkEndOfPromptAndStartOfInputUntilNextMarker => write!(f, "B")?,
             Self::MarkEndOfPromptAndStartOfInputUntilEndOfLine => write!(f, "I")?,
             Self::MarkEndOfInputAndStartOfOutput { aid } => {
                 write!(f, "C")?;
                 if let Some(aid) = aid {
-                    write!(f, ";aid={}", aid)?;
+                    write!(f, ";aid={aid}")?;
                 }
             }
             Self::CommandStatus {
                 status,
                 aid: Some(aid),
             } => {
-                write!(f, "D;{};err={};aid={}", status, status, aid)?;
+                write!(f, "D;{status};err={status};aid={aid}")?;
             }
             Self::CommandStatus { status, aid: None } => {
-                write!(f, "D;{}", status)?;
+                write!(f, "D;{status}")?;
             }
         }
         Ok(())
@@ -1043,7 +1041,7 @@ impl ITermFileData {
             .get("doNotMoveCursor")
             .map(|s| *s != "0")
             .unwrap_or(false);
-        let data = data.ok_or_else(|| format!("didn't set data"))?;
+        let data = data.ok_or_else(|| "didn't set data".to_string())?;
         Ok(Self {
             name,
             size,
@@ -1062,12 +1060,12 @@ impl Display for ITermFileData {
         write!(f, "File")?;
         let mut sep = "=";
         let emit_sep = |sep, f: &mut Formatter| -> core::result::Result<&str, FmtError> {
-            write!(f, "{}", sep)?;
+            write!(f, "{sep}")?;
             Ok(";")
         };
         if let Some(size) = self.size {
             sep = emit_sep(sep, f)?;
-            write!(f, "size={}", size)?;
+            write!(f, "size={size}")?;
         }
         if let Some(ref name) = self.name {
             sep = emit_sep(sep, f)?;
@@ -1122,9 +1120,9 @@ impl Display for ITermDimension {
         use self::ITermDimension::*;
         match self {
             Automatic => write!(f, "auto"),
-            Cells(n) => write!(f, "{}", n),
-            Pixels(n) => write!(f, "{}px", n),
-            Percent(n) => write!(f, "{}%", n),
+            Cells(n) => write!(f, "{n}"),
+            Pixels(n) => write!(f, "{n}px"),
+            Percent(n) => write!(f, "{n}%"),
         }
     }
 }
@@ -1140,12 +1138,10 @@ impl ITermDimension {
     fn parse(s: &str) -> Result<Self> {
         if s == "auto" {
             Ok(ITermDimension::Automatic)
-        } else if s.ends_with("px") {
-            let s = &s[..s.len() - 2];
+        } else if let Some(s) = s.strip_suffix("px") {
             let num = s.parse()?;
             Ok(ITermDimension::Pixels(num))
-        } else if s.ends_with('%') {
-            let s = &s[..s.len() - 1];
+        } else if let Some(s) = s.strip_suffix('%') {
             let num = s.parse()?;
             Ok(ITermDimension::Percent(num))
         } else {
@@ -1163,7 +1159,7 @@ impl ITermDimension {
             ITermDimension::Cells(n) => Some((*n).max(0) as usize * cell_size),
             ITermDimension::Pixels(n) => Some((*n).max(0) as usize),
             ITermDimension::Percent(n) => Some(
-                (((*n).max(0).min(100) as f32 / 100.0) * num_cells as f32 * cell_size as f32)
+                (((*n).clamp(0, 100) as f32 / 100.0) * num_cells as f32 * cell_size as f32)
                     as usize,
             ),
         }
@@ -1171,7 +1167,7 @@ impl ITermDimension {
 }
 
 impl ITermProprietary {
-    #[allow(clippy::cyclomatic_complexity, clippy::cognitive_complexity)]
+    #[allow(clippy::cognitive_complexity, clippy::cognitive_complexity)]
     fn parse(osc: &[&[u8]]) -> Result<Self> {
         // iTerm has a number of different styles of OSC parameter
         // encodings, which makes this section of code a bit gnarly.
@@ -1180,7 +1176,7 @@ impl ITermProprietary {
         let param = String::from_utf8_lossy(osc[1]);
 
         let mut iter = param.splitn(2, '=');
-        let keyword = iter.next().ok_or_else(|| format!("bad params"))?;
+        let keyword = iter.next().ok_or_else(|| "bad params".to_string())?;
         let p1 = iter.next();
 
         macro_rules! single {
@@ -1224,7 +1220,7 @@ impl ITermProprietary {
         one_str!(CopyToClipboard, "CopyToClipboard");
 
         let p1_empty = match p1 {
-            Some(p1) if p1 == "" => true,
+            Some(p1) if p1.is_empty() => true,
             None => true,
             _ => false,
         };
@@ -1336,9 +1332,9 @@ impl Display for ITermProprietary {
             SetMark => write!(f, "SetMark")?,
             StealFocus => write!(f, "StealFocus")?,
             ClearScrollback => write!(f, "ClearScrollback")?,
-            CurrentDir(s) => write!(f, "CurrentDir={}", s)?,
-            SetProfile(s) => write!(f, "SetProfile={}", s)?,
-            CopyToClipboard(s) => write!(f, "CopyToClipboard={}", s)?,
+            CurrentDir(s) => write!(f, "CurrentDir={s}")?,
+            SetProfile(s) => write!(f, "SetProfile={s}")?,
+            CopyToClipboard(s) => write!(f, "CopyToClipboard={s}")?,
             EndCopy => write!(f, "EndCopy")?,
             HighlightCursorLine(yes) => {
                 write!(f, "HighlightCursorLine={}", if *yes { "yes" } else { "no" })?
@@ -1364,13 +1360,13 @@ impl Display for ITermProprietary {
             }
             SetBadgeFormat(s) => write!(f, "SetBadgeFormat={}", base64_encode(s))?,
             File(file) => file.fmt(f)?,
-            UnicodeVersion(ITermUnicodeVersionOp::Set(n)) => write!(f, "UnicodeVersion={}", n)?,
+            UnicodeVersion(ITermUnicodeVersionOp::Set(n)) => write!(f, "UnicodeVersion={n}")?,
             UnicodeVersion(ITermUnicodeVersionOp::Push(Some(label))) => {
-                write!(f, "UnicodeVersion=push {}", label)?
+                write!(f, "UnicodeVersion=push {label}")?
             }
             UnicodeVersion(ITermUnicodeVersionOp::Push(None)) => write!(f, "UnicodeVersion=push")?,
             UnicodeVersion(ITermUnicodeVersionOp::Pop(Some(label))) => {
-                write!(f, "UnicodeVersion=pop {}", label)?
+                write!(f, "UnicodeVersion=pop {label}")?
             }
             UnicodeVersion(ITermUnicodeVersionOp::Pop(None)) => write!(f, "UnicodeVersion=pop")?,
         }
@@ -1387,7 +1383,7 @@ mod test {
     use super::*;
 
     fn encode(osc: &OperatingSystemCommand) -> String {
-        format!("{}", osc)
+        format!("{osc}")
     }
 
     fn parse(osc: &[&str], expected: &str) -> OperatingSystemCommand {

@@ -37,11 +37,11 @@ impl Default for SmallColor {
     }
 }
 
-impl Into<ColorAttribute> for SmallColor {
-    fn into(self) -> ColorAttribute {
-        match self {
-            Self::Default => ColorAttribute::Default,
-            Self::PaletteIndex(idx) => ColorAttribute::PaletteIndex(idx),
+impl From<SmallColor> for ColorAttribute {
+    fn from(val: SmallColor) -> Self {
+        match val {
+            SmallColor::Default => ColorAttribute::Default,
+            SmallColor::PaletteIndex(idx) => ColorAttribute::PaletteIndex(idx),
         }
     }
 }
@@ -629,7 +629,7 @@ impl TeenyString {
                     len,
                 );
             }
-            let word = Self::set_marker_bit(word as u64, width);
+            let word = Self::set_marker_bit(word, width);
             Self(word)
         } else {
             let vec = Box::new(TeenyStringHeap {
@@ -947,7 +947,7 @@ pub fn unicode_column_width(s: &str, version: Option<&UnicodeVersion>) -> usize 
 /// the Cell that is used to hold a grapheme, and that per-Cell version
 /// can then be used to calculate width.
 pub fn grapheme_column_width(s: &str, version: Option<&UnicodeVersion>) -> usize {
-    let version = version.as_deref().unwrap_or(&LATEST_UNICODE_VERSION);
+    let version = version.unwrap_or(&LATEST_UNICODE_VERSION);
 
     // Optimization: if there is a single byte we can directly cast
     // that byte as a char which will be in the range 0.255.
@@ -1017,7 +1017,7 @@ mod test {
         );
 
         let s = TeenyString::from_char('a');
-        assert_eq!(s.as_bytes(), &[b'a']);
+        assert_eq!(s.as_bytes(), b"a");
 
         let longer = TeenyString::from_str("hellothere", None, None);
         assert_eq!(longer.as_bytes(), b"hellothere");
@@ -1058,9 +1058,9 @@ mod test {
         let foot = "\u{1f9b6}";
         eprintln!("foot chars");
         for c in foot.chars() {
-            eprintln!("char: {:?}", c);
+            eprintln!("char: {c:?}");
         }
-        assert_eq!(unicode_column_width(foot, None), 2, "{} should be 2", foot);
+        assert_eq!(unicode_column_width(foot, None), 2, "{foot} should be 2");
 
         let women_holding_hands_dark_skin_tone_medium_light_skin_tone =
             "\u{1F469}\u{1F3FF}\u{200D}\u{1F91D}\u{200D}\u{1F469}\u{1F3FC}";
@@ -1079,14 +1079,13 @@ mod test {
         assert_eq!(
             cell.width(),
             2,
-            "width of {} should be 2",
-            women_holding_hands_dark_skin_tone_medium_light_skin_tone
+            "width of {women_holding_hands_dark_skin_tone_medium_light_skin_tone} should be 2"
         );
 
         let deaf_man = "\u{1F9CF}\u{200D}\u{2642}\u{FE0F}";
         eprintln!("deaf_man chars");
         for c in deaf_man.chars() {
-            eprintln!("char: {:?}", c);
+            eprintln!("char: {c:?}");
         }
         assert_eq!(unicode_column_width(deaf_man, None), 2);
 

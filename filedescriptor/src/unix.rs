@@ -201,7 +201,6 @@ impl OwnedHandle {
     }
 
     pub(crate) fn probe_handle_type(_handle: RawFileDescriptor) -> HandleType {
-        ()
     }
 }
 
@@ -291,6 +290,12 @@ impl FileDescriptor {
     /// resources that may not be available, this is a potentially fallible operation.
     /// The returned handle has a separate lifetime from the source, but
     /// references the same object at the kernel level.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `dest_fd` is either a valid file descriptor
+    /// that can be safely closed, or a negative value (which will cause the
+    /// kernel to allocate a new descriptor).
     pub unsafe fn dup2<F: AsRawFileDescriptor>(f: &F, dest_fd: RawFd) -> Result<Self> {
         OwnedHandle::dup2_impl(f, dest_fd).map(|handle| Self { handle })
     }
@@ -501,9 +506,9 @@ mod macos {
             Ok(())
         }
 
-        pub fn contains(&mut self, fd: RawFd) -> bool {
+        pub fn contains(&self, fd: RawFd) -> bool {
             check_fd(fd).unwrap();
-            unsafe { FD_ISSET(fd, &mut self.set) }
+            unsafe { FD_ISSET(fd, &self.set) }
         }
     }
 

@@ -64,7 +64,7 @@ impl crate::sessioninner::SessionInner {
 
         if let Some(files) = self.config.get("identityfile") {
             for file in files.split_whitespace() {
-                let pubkey: PathBuf = format!("{}.pub", file).into();
+                let pubkey: PathBuf = format!("{file}.pub").into();
                 let file = Path::new(file);
 
                 if !file.exists() {
@@ -78,7 +78,7 @@ impl crate::sessioninner::SessionInner {
                 };
 
                 // We try with no passphrase first, in case the key is unencrypted
-                match sess.userauth_pubkey_file(user, pubkey, &file, None) {
+                match sess.userauth_pubkey_file(user, pubkey, file, None) {
                     Ok(_) => {
                         log::info!("pubkey_file immediately ok for {}", file.display());
                         return Ok(true);
@@ -113,12 +113,12 @@ impl crate::sessioninner::SessionInner {
 
                         let passphrase = &answers[0];
 
-                        match sess.userauth_pubkey_file(user, pubkey, &file, Some(passphrase)) {
+                        match sess.userauth_pubkey_file(user, pubkey, file, Some(passphrase)) {
                             Ok(_) => {
                                 return Ok(true);
                             }
                             Err(err) => {
-                                log::warn!("pubkey auth: {:#}", err);
+                                log::warn!("pubkey auth: {err:#}");
                             }
                         }
                     }
@@ -141,7 +141,7 @@ impl crate::sessioninner::SessionInner {
                 instructions: "".to_string(),
                 prompts: vec![AuthenticationPrompt {
                     prompt: match identity {
-                        Some(ident) => format!("{} ({}): ", prompt, ident),
+                        Some(ident) => format!("{prompt} ({ident}): "),
                         None => prompt.to_string(),
                     },
                     echo,
@@ -157,10 +157,7 @@ impl crate::sessioninner::SessionInner {
         });
 
         use libssh_rs::{AuthMethods, AuthStatus};
-        match sess.userauth_none(None)? {
-            AuthStatus::Success => return Ok(()),
-            _ => {}
-        }
+        if sess.userauth_none(None)? == AuthStatus::Success { return Ok(()) }
 
         loop {
             let auth_methods = sess.userauth_list(None)?;
@@ -212,7 +209,7 @@ impl crate::sessioninner::SessionInner {
                         }
                         AuthStatus::Partial => continue,
                         status => {
-                            anyhow::bail!("interactive auth status: {:?}", status);
+                            anyhow::bail!("interactive auth status: {status:?}");
                         }
                     }
                 }
@@ -240,14 +237,12 @@ impl crate::sessioninner::SessionInner {
                 match sess.userauth_password(None, Some(&pw))? {
                     AuthStatus::Success => return Ok(()),
                     AuthStatus::Partial => continue,
-                    status => anyhow::bail!("password auth status: {:?}", status),
+                    status => anyhow::bail!("password auth status: {status:?}"),
                 }
             }
 
             anyhow::bail!(
-                "unhandled auth case; methods={:?}, status={:?}",
-                auth_methods,
-                status_by_method
+                "unhandled auth case; methods={auth_methods:?}, status={status_by_method:?}"
             );
         }
     }
@@ -269,8 +264,8 @@ impl crate::sessioninner::SessionInner {
             // Re-query the auth methods on each loop as a successful method
             // may unlock a new method on a subsequent iteration (eg: password
             // auth may then unlock 2fac)
-            let methods: HashSet<&str> = sess.auth_methods(&user)?.split(',').collect();
-            log::trace!("ssh auth methods: {:?}", methods);
+            let methods: HashSet<&str> = sess.auth_methods(user)?.split(',').collect();
+            log::trace!("ssh auth methods: {methods:?}");
 
             if !sess.authenticated() && methods.contains("publickey") {
                 if self.agent_auth(sess, user)? {
@@ -289,7 +284,7 @@ impl crate::sessioninner::SessionInner {
                         username: user.to_string(),
                         instructions: "".to_string(),
                         prompts: vec![AuthenticationPrompt {
-                            prompt: format!("Password for {}@{}: ", user, host),
+                            prompt: format!("Password for {user}@{host}: "),
                             echo: false,
                         }],
                         reply,
@@ -304,7 +299,7 @@ impl crate::sessioninner::SessionInner {
                 }
 
                 if let Err(err) = sess.userauth_password(user, &answers[0]) {
-                    log::error!("while attempting password auth: {}", err);
+                    log::error!("while attempting password auth: {err}");
                 }
             }
 
@@ -335,17 +330,16 @@ impl crate::sessioninner::SessionInner {
                                 reply,
                             },
                         )) {
-                            log::error!("sending Authenticate request to user: {:#}", err);
+                            log::error!("sending Authenticate request to user: {err:#}");
                             return vec![];
                         }
 
                         match smol::block_on(answers.recv()) {
                             Err(err) => {
                                 log::error!(
-                                    "waiting for authentication answers from user: {:#}",
-                                    err
+                                    "waiting for authentication answers from user: {err:#}"
                                 );
-                                return vec![];
+                                vec![]
                             }
                             Ok(answers) => answers,
                         }
@@ -357,7 +351,7 @@ impl crate::sessioninner::SessionInner {
                 };
 
                 if let Err(err) = sess.userauth_keyboard_interactive(user, &mut helper) {
-                    log::error!("while attempting keyboard-interactive auth: {}", err);
+                    log::error!("while attempting keyboard-interactive auth: {err}");
                 }
             }
         }

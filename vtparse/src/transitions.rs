@@ -353,7 +353,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_transitions() {
-        let v = format!("{:?}", TRANSITIONS).as_bytes().to_vec();
+        let v = format!("{TRANSITIONS:?}").as_bytes().to_vec();
         assert_eq!(
             (
                 v.len(),

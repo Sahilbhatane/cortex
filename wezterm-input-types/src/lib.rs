@@ -124,24 +124,24 @@ pub enum KeyCode {
 impl KeyCode {
     /// Return true if the key represents a modifier key.
     pub fn is_modifier(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::Hyper
-            | Self::CapsLock
-            | Self::Super
-            | Self::Meta
-            | Self::Shift
-            | Self::LeftShift
-            | Self::RightShift
-            | Self::Control
-            | Self::LeftControl
-            | Self::RightControl
-            | Self::Alt
-            | Self::LeftAlt
-            | Self::RightAlt
-            | Self::LeftWindows
-            | Self::RightWindows => true,
-            _ => false,
-        }
+                | Self::CapsLock
+                | Self::Super
+                | Self::Meta
+                | Self::Shift
+                | Self::LeftShift
+                | Self::RightShift
+                | Self::Control
+                | Self::LeftControl
+                | Self::RightControl
+                | Self::Alt
+                | Self::LeftAlt
+                | Self::RightAlt
+                | Self::LeftWindows
+                | Self::RightWindows
+        )
     }
 
     pub fn normalize_shift(&self, modifiers: Modifiers) -> (KeyCode, Modifiers) {
@@ -420,7 +420,7 @@ impl TryFrom<&str> for KeyCode {
         if let Some(n) = s.strip_prefix("Numpad") {
             let n: u8 = n
                 .parse()
-                .map_err(|err| format!("parsing Numpad<NUMBER>: {:#}", err))?;
+                .map_err(|err| format!("parsing Numpad<NUMBER>: {err:#}"))?;
             if n > 9 {
                 return Err("Numpad numbers must be in range 0-9".to_string());
             }
@@ -432,7 +432,7 @@ impl TryFrom<&str> for KeyCode {
             if let Some(n) = s.strip_prefix("F") {
                 let n: u8 = n
                     .parse()
-                    .map_err(|err| format!("parsing F<NUMBER>: {:#}", err))?;
+                    .map_err(|err| format!("parsing F<NUMBER>: {err:#}"))?;
                 if n == 0 || n > 24 {
                     return Err("Function key numbers must be in range 1-24".to_string());
                 }
@@ -445,7 +445,7 @@ impl TryFrom<&str> for KeyCode {
             let k = KeyCode::Char(chars[0]);
             Ok(k)
         } else {
-            Err(format!("invalid KeyCode string {}", s))
+            Err(format!("invalid KeyCode string {s}"))
         }
     }
 }
@@ -453,13 +453,13 @@ impl TryFrom<&str> for KeyCode {
 impl ToString for KeyCode {
     fn to_string(&self) -> String {
         match self {
-            Self::RawCode(n) => format!("raw:{}", n),
-            Self::Char(c) => format!("mapped:{}", c),
+            Self::RawCode(n) => format!("raw:{n}"),
+            Self::Char(c) => format!("mapped:{c}"),
             Self::Physical(phys) => phys.to_string(),
             Self::Composed(s) => s.to_string(),
-            Self::Numpad(n) => format!("Numpad{}", n),
-            Self::Function(n) => format!("F{}", n),
-            other => format!("{:?}", other),
+            Self::Numpad(n) => format!("Numpad{n}"),
+            Self::Function(n) => format!("F{n}"),
+            other => format!("{other:?}"),
         }
     }
 }
@@ -530,10 +530,10 @@ impl TryFrom<String> for Modifiers {
                 mods |= Modifiers::SUPER;
             } else if ele == "LEADER" {
                 mods |= Modifiers::LEADER;
-            } else if ele == "NONE" || ele == "" {
+            } else if ele == "NONE" || ele.is_empty() {
                 mods |= Modifiers::NONE;
             } else {
-                return Err(format!("invalid modifier name {} in {}", ele, s));
+                return Err(format!("invalid modifier name {ele} in {s}"));
             }
         }
         Ok(mods)
@@ -871,17 +871,17 @@ pub enum PhysKeyCode {
 
 impl PhysKeyCode {
     pub fn is_modifier(&self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::LeftShift
-            | Self::LeftControl
-            | Self::LeftWindows
-            | Self::LeftAlt
-            | Self::RightShift
-            | Self::RightControl
-            | Self::RightWindows
-            | Self::RightAlt => true,
-            _ => false,
-        }
+                | Self::LeftControl
+                | Self::LeftWindows
+                | Self::LeftAlt
+                | Self::RightShift
+                | Self::RightControl
+                | Self::RightWindows
+                | Self::RightAlt
+        )
     }
 
     pub fn to_key_code(self) -> KeyCode {
@@ -1174,7 +1174,7 @@ impl PhysKeyCode {
     fn name_to_code(name: &str) -> Option<Self> {
         #[cfg(feature = "std")]
         {
-            return PHYSKEYCODE_MAP.get(name).copied();
+            PHYSKEYCODE_MAP.get(name).copied()
         }
         #[cfg(not(feature = "std"))]
         {
@@ -1194,7 +1194,7 @@ impl PhysKeyCode {
     fn to_name(&self) -> Option<String> {
         #[cfg(feature = "std")]
         {
-            return INV_PHYSKEYCODE_MAP.get(self).cloned();
+            INV_PHYSKEYCODE_MAP.get(self).cloned()
         }
         #[cfg(not(feature = "std"))]
         {
@@ -1225,7 +1225,7 @@ impl TryFrom<&str> for PhysKeyCode {
         if let Some(code) = Self::name_to_code(s) {
             Ok(code)
         } else {
-            Err(format!("invalid PhysKeyCode '{}'", s))
+            Err(format!("invalid PhysKeyCode '{s}'"))
         }
     }
 }
@@ -1235,7 +1235,7 @@ impl ToString for PhysKeyCode {
         if let Some(s) = self.to_name() {
             s.to_string()
         } else {
-            format!("{:?}", self)
+            format!("{self:?}")
         }
     }
 }
@@ -1282,6 +1282,12 @@ pub struct MouseEvent {
 
 #[derive(Debug, Clone)]
 pub struct Handled(Arc<AtomicBool>);
+
+impl Default for Handled {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Handled {
     pub fn new() -> Self {
@@ -1349,7 +1355,7 @@ impl RawKeyEvent {
             // PrintScreen => 57361,
             // Pause => 57362,
             // Menu => 57363,
-            Function(n) if n >= 13 && n <= 35 => 57376 + n as u32 - 13,
+            Function(n) if (13..=35).contains(&n) => 57376 + n as u32 - 13,
             Numpad(n) => n as u32 + 57399,
             Decimal => 57409,
             Divide => 57410,
@@ -2022,7 +2028,7 @@ fn csi_u_encode(buf: &mut String, c: char, mods: Modifiers) {
     if mods.contains(Modifiers::ALT) {
         buf.push(0x1b as char);
     }
-    write!(buf, "{}", c).ok();
+    write!(buf, "{c}").ok();
 }
 
 bitflags::bitflags! {
@@ -2054,26 +2060,26 @@ bitflags! {
     }
 }
 
-impl Into<String> for &WindowDecorations {
-    fn into(self) -> String {
+impl From<&WindowDecorations> for String {
+    fn from(val: &WindowDecorations) -> Self {
         let mut s = vec![];
-        if self.contains(WindowDecorations::TITLE) {
+        if val.contains(WindowDecorations::TITLE) {
             s.push("TITLE");
         }
-        if self.contains(WindowDecorations::RESIZE) {
+        if val.contains(WindowDecorations::RESIZE) {
             s.push("RESIZE");
         }
-        if self.contains(WindowDecorations::INTEGRATED_BUTTONS) {
+        if val.contains(WindowDecorations::INTEGRATED_BUTTONS) {
             s.push("INTEGRATED_BUTTONS");
         }
-        if self.contains(WindowDecorations::MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR) {
+        if val.contains(WindowDecorations::MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR) {
             s.push("MACOS_USE_BACKGROUND_COLOR_AS_TITLEBAR_COLOR")
         }
-        if self.contains(WindowDecorations::MACOS_FORCE_ENABLE_SHADOW) {
+        if val.contains(WindowDecorations::MACOS_FORCE_ENABLE_SHADOW) {
             s.push("MACOS_FORCE_ENABLE_SHADOW");
-        } else if self.contains(WindowDecorations::MACOS_FORCE_DISABLE_SHADOW) {
+        } else if val.contains(WindowDecorations::MACOS_FORCE_DISABLE_SHADOW) {
             s.push("MACOS_FORCE_DISABLE_SHADOW");
-        } else if self.contains(WindowDecorations::MACOS_FORCE_SQUARE_CORNERS) {
+        } else if val.contains(WindowDecorations::MACOS_FORCE_SQUARE_CORNERS) {
             s.push("MACOS_FORCE_SQUARE_CORNERS");
         }
         if s.is_empty() {
@@ -2107,7 +2113,7 @@ impl TryFrom<String> for WindowDecorations {
             } else if ele == "INTEGRATED_BUTTONS" {
                 flags |= Self::INTEGRATED_BUTTONS;
             } else {
-                return Err(format!("invalid WindowDecoration name {} in {}", ele, s));
+                return Err(format!("invalid WindowDecoration name {ele} in {s}"));
             }
         }
         Ok(flags)

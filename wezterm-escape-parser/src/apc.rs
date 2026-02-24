@@ -3,7 +3,7 @@ use crate::osc::{base64_decode, base64_encode};
 use core::fmt::{Display, Error as FmtError, Formatter};
 
 fn get<'a>(keys: &BTreeMap<&str, &'a str>, k: &str) -> Option<&'a str> {
-    keys.get(k).map(|&s| s)
+    keys.get(k).copied()
 }
 
 fn geti<T: core::str::FromStr>(keys: &BTreeMap<&str, &str>, k: &str) -> Option<T> {
@@ -110,17 +110,17 @@ impl KittyImageData {
         match t {
             "d" => Some(Self::Direct(String::from_utf8(payload.to_vec()).ok()?)),
             "f" => Some(Self::File {
-                path: String::from_utf8(base64_decode(payload.to_vec()).ok()?).ok()?,
+                path: String::from_utf8(base64_decode(payload).ok()?).ok()?,
                 data_size: geti(keys, "S"),
                 data_offset: geti(keys, "O"),
             }),
             "t" => Some(Self::TemporaryFile {
-                path: String::from_utf8(base64_decode(payload.to_vec()).ok()?).ok()?,
+                path: String::from_utf8(base64_decode(payload).ok()?).ok()?,
                 data_size: geti(keys, "S"),
                 data_offset: geti(keys, "O"),
             }),
             "s" => Some(Self::SharedMem {
-                name: String::from_utf8(base64_decode(payload.to_vec()).ok()?).ok()?,
+                name: String::from_utf8(base64_decode(payload).ok()?).ok()?,
                 data_size: geti(keys, "S"),
                 data_offset: geti(keys, "O"),
             }),
@@ -142,7 +142,7 @@ impl KittyImageData {
                 data_size,
             } => {
                 keys.insert("t", "f".to_string());
-                keys.insert("payload", base64_encode(&path));
+                keys.insert("payload", base64_encode(path));
                 set(keys, "S", data_size);
                 set(keys, "S", data_offset);
             }
@@ -152,7 +152,7 @@ impl KittyImageData {
                 data_size,
             } => {
                 keys.insert("t", "t".to_string());
-                keys.insert("payload", base64_encode(&path));
+                keys.insert("payload", base64_encode(path));
                 set(keys, "S", data_size);
                 set(keys, "S", data_offset);
             }
@@ -162,7 +162,7 @@ impl KittyImageData {
                 data_size,
             } => {
                 keys.insert("t", "s".to_string());
-                keys.insert("payload", base64_encode(&name));
+                keys.insert("payload", base64_encode(name));
                 set(keys, "S", data_size);
                 set(keys, "S", data_offset);
             }
@@ -197,12 +197,10 @@ impl KittyImageData {
         }
 
         match self {
-            Self::Direct(data) => base64_decode(data).or_else(|err| {
-                Err(std::io::Error::new(
+            Self::Direct(data) => base64_decode(data).map_err(|err| std::io::Error::new(
                     std::io::ErrorKind::InvalidInput,
                     format!("base64 decode: {err:#}"),
-                ))
-            }),
+                )),
             Self::DirectBin(bin) => Ok(bin),
             Self::File {
                 path,
@@ -238,16 +236,13 @@ impl KittyImageData {
                 if looks_like_temp_path(&path) {
                     if let Err(err) = std::fs::remove_file(&path) {
                         log::error!(
-                            "Unable to remove kitty image protocol temporary file {}: {:#}",
-                            path,
-                            err
+                            "Unable to remove kitty image protocol temporary file {path}: {err:#}"
                         );
                     }
                 } else {
                     log::warn!(
-                        "kitty image protocol temporary file {} isn't in a known \
-                                temporary directory; won't try to remove it",
-                        path
+                        "kitty image protocol temporary file {path} isn't in a known \
+                                temporary directory; won't try to remove it"
                     );
                 }
 
@@ -279,9 +274,8 @@ fn read_shared_memory_data(
     )
     .map_err(|_| {
         let err = std::io::Error::last_os_error();
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("shm_open {} failed: {:#}", name, err),
+        std::io::Error::other(
+            format!("shm_open {name} failed: {err:#}"),
         )
     })?;
     let mut f = File::from(fd);
@@ -300,9 +294,7 @@ fn read_shared_memory_data(
 
     if let Err(err) = shm_unlink(name) {
         log::warn!(
-            "Unable to unlink kitty image protocol shm file {}: {:#}",
-            name,
-            err
+            "Unable to unlink kitty image protocol shm file {name}: {err:#}"
         );
     }
     Ok(data)
@@ -1067,9 +1059,9 @@ impl KittyImage {
         let key_string = core::str::from_utf8(keys).ok()?;
         let mut keys: BTreeMap<&str, &str> = BTreeMap::new();
         for k_v in key_string.split(',') {
-            let mut k_v = k_v.splitn(2, '=');
-            let k = k_v.next()?;
-            let v = k_v.next()?;
+            let (k, v) = k_v.split_once('=')?;
+            
+            
             keys.insert(k, v);
         }
 
@@ -1193,12 +1185,12 @@ impl Display for KittyImage {
                     write!(f, ",")?;
                 }
 
-                write!(f, "{}={}", k, v)?;
+                write!(f, "{k}={v}")?;
             }
         }
 
         if let Some(p) = payload {
-            write!(f, ";{}", p)?;
+            write!(f, ";{p}")?;
         }
 
         Ok(())

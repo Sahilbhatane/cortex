@@ -90,9 +90,9 @@ impl SubscriptionTier {
     pub fn stripe_price_id_monthly(&self) -> Option<&'static str> {
         match self {
             Self::Core => None,
-            Self::Pro => Some("price_1SpotMJ4X1wkC4EspVzV5tT6"),
-            Self::Team => Some("price_1SpotNJ4X1wkC4EsN13pV2dA"),
-            Self::Enterprise => Some("price_1SpotOJ4X1wkC4Es7ZqOzh1H"),
+            Self::Pro => Some("price_1SqYQjJ4X1wkC4EsLDB6ZbOk"),
+            Self::Team => Some("price_1SqYQkJ4X1wkC4Es8OMt79pZ"),
+            Self::Enterprise => Some("price_1SqYQkJ4X1wkC4EsCFVBHYnT"),
         }
     }
 
@@ -100,9 +100,9 @@ impl SubscriptionTier {
     pub fn stripe_price_id_annual(&self) -> Option<&'static str> {
         match self {
             Self::Core => None,
-            Self::Pro => Some("price_1SpotMJ4X1wkC4Es3tuZGVHY"),
-            Self::Team => Some("price_1SpotNJ4X1wkC4Esw5ienNNQ"),
-            Self::Enterprise => Some("price_1SpotOJ4X1wkC4EslmMmWWZI"),
+            Self::Pro => Some("price_1SqYQjJ4X1wkC4EslIkZEJFZ"),
+            Self::Team => Some("price_1SqYQkJ4X1wkC4EsWYwUgceu"),
+            Self::Enterprise => Some("price_1SqYQlJ4X1wkC4EsJcPW7Of2"),
         }
     }
 

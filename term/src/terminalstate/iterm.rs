@@ -147,7 +147,7 @@ impl TerminalState {
             placement_id: None,
             do_not_move_cursor: image.do_not_move_cursor,
         }) {
-            log::error!("set iterm2 image: {:#}", err);
+            log::error!("set iterm2 image: {err:#}");
         }
     }
 }

@@ -35,7 +35,7 @@ impl Default for Value {
 impl core::fmt::Debug for Value {
     fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
         match self {
-            Self::String(s) => fmt.write_fmt(format_args!("{:?}", s)),
+            Self::String(s) => fmt.write_fmt(format_args!("{s:?}")),
             Self::Null => fmt.write_str("nil"),
             Self::Bool(i) => i.fmt(fmt),
             Self::I64(i) => i.fmt(fmt),

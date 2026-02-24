@@ -79,9 +79,9 @@ impl From<&Regex> for RegexWrap {
     }
 }
 
-impl Into<Regex> for RegexWrap {
-    fn into(self) -> Regex {
-        self.0
+impl From<RegexWrap> for Regex {
+    fn from(val: RegexWrap) -> Self {
+        val.0
     }
 }
 
@@ -97,7 +97,7 @@ where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
-    Regex::new(&s).map_err(|e| serde::de::Error::custom(format!("{:?}", e)))
+    Regex::new(&s).map_err(|e| serde::de::Error::custom(format!("{e:?}")))
 }
 
 #[cfg(feature = "use_serde")]
@@ -150,7 +150,7 @@ impl<'t> Match<'t> {
         // Start with the highest numbered capture and decrement.
         // This avoids ambiguity when replacing $11 vs $1.
         for n in (0..self.captures.len()).rev() {
-            let search = format!("${}", n);
+            let search = format!("${n}");
             if let Some(rep) = self.captures.get(n) {
                 result = result.replace(&search, rep.as_str());
             } else {
@@ -261,8 +261,7 @@ mod test {
             assert_eq!(
                 Rule::match_hyperlinks(test_uri, &rules)[0].link.uri(),
                 expected_uri,
-                "{}",
-                msg,
+                "{msg}",
             );
         }
 

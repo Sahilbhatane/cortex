@@ -111,7 +111,7 @@ pub enum EscCode {
 
 impl Esc {
     pub fn parse(intermediate: Option<u8>, control: u8) -> Self {
-        Self::internal_parse(intermediate, control).unwrap_or_else(|_| Esc::Unspecified {
+        Self::internal_parse(intermediate, control).unwrap_or(Esc::Unspecified {
             intermediate,
             control,
         })
@@ -174,7 +174,7 @@ mod test {
     use alloc::string::String;
 
     fn encode(osc: &Esc) -> String {
-        format!("{}", osc)
+        format!("{osc}")
     }
 
     fn parse(esc: &str) -> Esc {
@@ -184,7 +184,7 @@ mod test {
             Esc::parse(Some(esc.as_bytes()[0]), esc.as_bytes()[1])
         };
 
-        assert_eq!(encode(&result), format!("\x1b{}", esc));
+        assert_eq!(encode(&result), format!("\x1b{esc}"));
 
         result
     }

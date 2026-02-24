@@ -127,7 +127,7 @@ pub enum BidiClass {{
                 "RLO" => "BidiClass::RightToLeftOverride",
                 "S" => "BidiClass::SegmentSeparator",
                 "WS" => "BidiClass::WhiteSpace",
-                bad => panic!("invalid BidiClass {}", bad),
+                bad => panic!("invalid BidiClass {bad}"),
             },
             entry.comment
         )?;
@@ -211,7 +211,7 @@ fn gen_brackets() -> anyhow::Result<()> {
             match entry.bidi_paired_bracket_type {
                 'o' => "BracketType::Open",
                 'c' => "BracketType::Close",
-                bad => panic!("invalid BracketType {}", bad),
+                bad => panic!("invalid BracketType {bad}"),
             },
             entry.comment
         )?;

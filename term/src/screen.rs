@@ -362,7 +362,7 @@ impl Screen {
     /// Returns a copy of the lines in the screen (including scrollback)
     #[cfg(test)]
     pub fn all_lines(&self) -> Vec<Line> {
-        self.lines.iter().map(|l| l.clone()).collect()
+        self.lines.iter().cloned().collect()
     }
 
     pub fn insert_cell(
@@ -555,10 +555,7 @@ impl Screen {
         bidi_mode: BidiMode,
     ) {
         log::debug!(
-            "scroll_up_within_margins region:{:?} margins:{:?} rows={}",
-            scroll_region,
-            left_and_right_margins,
-            num_rows
+            "scroll_up_within_margins region:{scroll_region:?} margins:{left_and_right_margins:?} rows={num_rows}"
         );
 
         if left_and_right_margins.start == 0 && left_and_right_margins.end == self.physical_cols {
@@ -656,8 +653,7 @@ impl Screen {
         let insert_at_end = scroll_region.end as usize == self.physical_rows;
 
         debug!(
-            "scroll_up {:?} num_rows={} phys_scroll={:?}",
-            scroll_region, num_rows, phys_scroll
+            "scroll_up {scroll_region:?} num_rows={num_rows} phys_scroll={phys_scroll:?}"
         );
         // Invalidate the lines that will move before they move so that
         // the indices of the lines are stable (we may remove lines below)
@@ -790,7 +786,7 @@ impl Screen {
         blank_attr: CellAttributes,
         bidi_mode: BidiMode,
     ) {
-        debug!("scroll_down {:?} {}", scroll_region, num_rows);
+        debug!("scroll_down {scroll_region:?} {num_rows}");
         let phys_scroll = self.phys_range(scroll_region);
         let num_rows = num_rows.min(phys_scroll.end - phys_scroll.start);
 

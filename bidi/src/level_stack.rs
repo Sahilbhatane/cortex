@@ -38,11 +38,7 @@ impl LevelStack {
             return;
         }
         log::trace!(
-            "pushing level={:?} override={:?} isolate={} at depth={}",
-            level,
-            override_status,
-            isolate_status,
-            depth
+            "pushing level={level:?} override={override_status:?} isolate={isolate_status} at depth={depth}"
         );
         self.embedding_level[depth] = level;
         self.override_status[depth] = override_status;

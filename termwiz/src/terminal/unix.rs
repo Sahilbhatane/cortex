@@ -128,7 +128,7 @@ impl Write for TtyWriteHandle {
     fn flush(&mut self) -> std::result::Result<(), IoError> {
         self.flush_local_buffer()?;
         self.drain()
-            .map_err(|e| IoError::new(ErrorKind::Other, format!("{}", e)))?;
+            .map_err(|e| IoError::other(format!("{e}")))?;
         Ok(())
     }
 }
@@ -444,7 +444,7 @@ impl Terminal for UnixTerminal {
         if let Err(err) = poll(&mut pfd, wait) {
             return match err
                 .source()
-                .ok_or_else(|| anyhow::anyhow!("error has no source! {:#}", err))?
+                .ok_or_else(|| anyhow::anyhow!("error has no source! {err:#}"))?
                 .downcast_ref::<std::io::Error>()
             {
                 Some(err) => {

@@ -175,6 +175,13 @@ pub trait IntoRawFileDescriptor {
 /// to indicate that care must be taken by the caller to ensure that it
 /// is used appropriately.
 pub trait FromRawFileDescriptor {
+    /// Create an instance from a raw file descriptor.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `fd` is a valid file descriptor and that
+    /// ownership is being transferred. The caller must not use `fd` after
+    /// calling this function.
     unsafe fn from_raw_file_descriptor(fd: RawFileDescriptor) -> Self;
 }
 
@@ -185,6 +192,13 @@ pub trait IntoRawSocketDescriptor {
     fn into_socket_descriptor(self) -> SocketDescriptor;
 }
 pub trait FromRawSocketDescriptor {
+    /// Create an instance from a raw socket descriptor.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that `fd` is a valid socket descriptor and that
+    /// ownership is being transferred. The caller must not use `fd` after
+    /// calling this function.
     unsafe fn from_socket_descriptor(fd: SocketDescriptor) -> Self;
 }
 

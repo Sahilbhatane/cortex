@@ -343,7 +343,7 @@ impl<'lua> std::fmt::Debug for ValuePrinterHelper<'lua> {
                 self.visited
                     .borrow_mut()
                     .insert(self.value.to_pointer() as usize);
-                if is_array_style_table(&t) {
+                if is_array_style_table(t) {
                     // Treat as list
                     let mut list = fmt.debug_list();
                     for value in t.clone().sequence_values() {
@@ -386,7 +386,7 @@ impl<'lua> std::fmt::Debug for ValuePrinterHelper<'lua> {
                                 );
                             }
                             Err(err) => {
-                                log::error!("error while retrieving map entry: {}", err);
+                                log::error!("error while retrieving map entry: {err}");
                                 break;
                             }
                         }
@@ -416,7 +416,7 @@ impl<'lua> std::fmt::Debug for ValuePrinterHelper<'lua> {
                     Err(err) => write!(fmt, "userdata ({err:#})"),
                 }
             }
-            LuaValue::Error(e) => fmt.write_fmt(format_args!("error {}", e)),
+            LuaValue::Error(e) => fmt.write_fmt(format_args!("error {e}")),
             LuaValue::String(s) => match s.to_str() {
                 Ok(s) => fmt.write_fmt(format_args!("\"{}\"", s.escape_default())),
                 Err(_) => {

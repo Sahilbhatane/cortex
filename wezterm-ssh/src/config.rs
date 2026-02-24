@@ -175,7 +175,7 @@ impl ParsedConfigFile {
         groups: &mut Vec<MatchGroup>,
         loaded_files: &mut Vec<PathBuf>,
     ) {
-        match filenamegen::Glob::new(&pattern) {
+        match filenamegen::Glob::new(pattern) {
             Ok(g) => {
                 match cwd
                     .as_ref()
@@ -213,14 +213,13 @@ impl ParsedConfigFile {
                     }
                     None => {
                         log::error!(
-                            "error expanding `Include {}`: unable to determine cwd",
-                            pattern
+                            "error expanding `Include {pattern}`: unable to determine cwd"
                         );
                     }
                 }
             }
             Err(err) => {
-                log::error!("error expanding `Include {}`: {:#}", pattern, err);
+                log::error!("error expanding `Include {pattern}`: {err:#}");
             }
         }
     }
@@ -253,8 +252,8 @@ impl ParsedConfigFile {
                     let mut patterns = vec![];
                     for p in v.split(',') {
                         let p = p.trim();
-                        if p.starts_with('!') {
-                            patterns.push(Pattern::new(&p[1..], true));
+                        if let Some(negated) = p.strip_prefix('!') {
+                            patterns.push(Pattern::new(negated, true));
                         } else {
                             patterns.push(Pattern::new(p, false));
                         }
@@ -265,8 +264,8 @@ impl ParsedConfigFile {
                     let mut patterns = vec![];
                     for p in v.split_ascii_whitespace() {
                         let p = p.trim();
-                        if p.starts_with('!') {
-                            patterns.push(Pattern::new(&p[1..], true));
+                        if let Some(negated) = p.strip_prefix('!') {
+                            patterns.push(Pattern::new(negated, true));
                         } else {
                             patterns.push(Pattern::new(p, false));
                         }
@@ -409,6 +408,12 @@ pub struct Config {
     environment: Option<ConfigMap>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Config {
     /// Create a new context without any config files loaded
     pub fn new() -> Self {
@@ -470,7 +475,7 @@ impl Config {
         }
         self.add_config_file("/etc/ssh/ssh_config");
         if let Ok(sysdrive) = std::env::var("SystemDrive") {
-            self.add_config_file(format!("{}/ProgramData/ssh/ssh_config", sysdrive));
+            self.add_config_file(format!("{sysdrive}/ProgramData/ssh/ssh_config"));
         }
     }
 
@@ -581,7 +586,7 @@ impl Config {
             if let Some(home) = self.resolve_home() {
                 result.insert(
                     "userknownhostsfile".to_string(),
-                    format!("{}/.ssh/known_hosts {}/.ssh/known_hosts2", home, home,),
+                    format!("{home}/.ssh/known_hosts {home}/.ssh/known_hosts2",),
                 );
             }
         }
@@ -591,8 +596,7 @@ impl Config {
                 result.insert(
                     "identityfile".to_string(),
                     format!(
-                        "{}/.ssh/id_dsa {}/.ssh/id_ecdsa {}/.ssh/id_ed25519 {}/.ssh/id_rsa",
-                        home, home, home, home
+                        "{home}/.ssh/id_dsa {home}/.ssh/id_ecdsa {home}/.ssh/id_ed25519 {home}/.ssh/id_rsa"
                     ),
                 );
             }
@@ -610,11 +614,16 @@ impl Config {
     /// Return true if a given option name is subject to environment variable
     /// expansion.
     fn should_expand_environment(&self, key: &str) -> bool {
-        match key {
-            "certificatefile" | "controlpath" | "identityagent" | "identityfile"
-            | "userknownhostsfile" | "localforward" | "remoteforward" => true,
-            _ => false,
-        }
+        matches!(
+            key,
+            "certificatefile"
+                | "controlpath"
+                | "identityagent"
+                | "identityfile"
+                | "userknownhostsfile"
+                | "localforward"
+                | "remoteforward"
+        )
     }
 
     /// Returns a set of tokens that should be expanded for a given option name
@@ -664,7 +673,7 @@ impl Config {
         #[cfg(unix)]
         {
             let uid = unsafe { libc::getuid() };
-            return uid.to_string();
+            uid.to_string()
         }
 
         #[cfg(not(unix))]
@@ -721,7 +730,7 @@ impl Config {
                 use sha2::Digest;
                 let mut c_value = "%l%h%p%r%j".to_string();
                 self.expand_tokens(&mut c_value, tokens, token_map);
-                let hashed = hex::encode(sha2::Sha256::digest(&c_value.as_bytes()));
+                let hashed = hex::encode(sha2::Sha256::digest(c_value.as_bytes()));
                 *value = value.replace("%C", &hashed);
             } else if value.contains(t) {
                 log::warn!("Unsupported token {t} when evaluating `{orig_value}`");
@@ -783,11 +792,10 @@ impl Config {
                 for c in &group.criteria {
                     if let Criteria::Host(patterns) = c {
                         for pattern in patterns {
-                            if pattern.is_literal && !pattern.negated {
-                                if !hosts.contains(&pattern.original) {
+                            if pattern.is_literal && !pattern.negated
+                                && !hosts.contains(&pattern.original) {
                                     hosts.push(pattern.original.clone());
                                 }
-                            }
                         }
                     }
                 }

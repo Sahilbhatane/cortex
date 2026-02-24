@@ -26,7 +26,7 @@ where
     D: Deserializer<'de>,
 {
     let value = f32::deserialize(deserializer)?;
-    NotNan::new(value).map_err(|e| serde::de::Error::custom(format!("{:?}", e)))
+    NotNan::new(value).map_err(|e| serde::de::Error::custom(format!("{e:?}")))
 }
 
 #[cfg(feature = "use_serde")]
@@ -177,8 +177,8 @@ impl ImageCell {
 
     /// negative z_index is rendered beneath the text layer.
     /// >= 0 is rendered above the text.
-    /// negative z_index < INT32_MIN/2 will be drawn under cells
-    /// with non-default background colors
+    /// > negative z_index < INT32_MIN/2 will be drawn under cells
+    /// > with non-default background colors
     pub fn z_index(&self) -> i32 {
         self.z_index
     }
@@ -331,13 +331,10 @@ impl ImageDataType {
     /// if the speed_factor is negative, non-finite or the result
     /// overflows the allow Duration range.
     pub fn adjust_speed(&mut self, speed_factor: f32) {
-        match self {
-            Self::AnimRgba8 { durations, .. } => {
-                for d in durations {
-                    *d = d.mul_f32(1. / speed_factor);
-                }
+        if let Self::AnimRgba8 { durations, .. } = self {
+            for d in durations {
+                *d = d.mul_f32(1. / speed_factor);
             }
-            _ => {}
         }
     }
 
@@ -384,7 +381,7 @@ impl ImageDataType {
                 let format = match image::guess_format(&data) {
                     Ok(format) => format,
                     Err(err) => {
-                        log::warn!("Unable to decode raw image data: {:#}", err);
+                        log::warn!("Unable to decode raw image data: {err:#}");
                         return Self::EncodedFile(data);
                     }
                 };
@@ -392,18 +389,17 @@ impl ImageDataType {
                 match format {
                     ImageFormat::Gif => image::codecs::gif::GifDecoder::new(cursor)
                         .and_then(|decoder| decoder.into_frames().collect_frames())
-                        .and_then(|frames| {
+                        .map(|frames| {
                             if frames.is_empty() {
                                 log::error!("decoded image has 0 frames, using placeholder");
-                                Ok(Self::placeholder())
+                                Self::placeholder()
                             } else {
-                                Ok(Self::decode_frames(frames))
+                                Self::decode_frames(frames)
                             }
                         })
                         .unwrap_or_else(|err| {
                             log::error!(
-                                "Unable to parse animated gif: {:#}, trying as single frame",
-                                err
+                                "Unable to parse animated gif: {err:#}, trying as single frame"
                             );
                             Self::decode_single(data)
                         }),

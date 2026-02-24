@@ -27,9 +27,9 @@ pub enum Blink {
 /// Allow converting to boolean; true means some kind of
 /// blink, false means none.  This is used in some
 /// generic code to determine whether to enable blink.
-impl Into<bool> for Blink {
-    fn into(self) -> bool {
-        self != Blink::None
+impl From<Blink> for bool {
+    fn from(val: Blink) -> Self {
+        val != Blink::None
     }
 }
 
@@ -80,9 +80,9 @@ impl Default for Underline {
 /// Allow converting to boolean; true means some kind of
 /// underline, false means none.  This is used in some
 /// generic code to determine whether to enable underline.
-impl Into<bool> for Underline {
-    fn into(self) -> bool {
-        self != Underline::None
+impl From<Underline> for bool {
+    fn from(val: Underline) -> Self {
+        val != Underline::None
     }
 }
 
@@ -203,7 +203,7 @@ pub struct Unspecified {
 impl Display for Unspecified {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         for p in &self.params {
-            write!(f, "{}", p)?;
+            write!(f, "{p}")?;
         }
         write!(f, "{}", self.control)
     }
@@ -242,8 +242,8 @@ impl Display for CSI {
                 };
                 match (a, n) {
                     (0, 0) => write!(f, " k")?,
-                    (a, 0) => write!(f, "{} k", a)?,
-                    (a, n) => write!(f, "{};{} k", a, n)?,
+                    (a, 0) => write!(f, "{a} k")?,
+                    (a, n) => write!(f, "{a};{n} k")?,
                 }
             }
         };
@@ -252,7 +252,9 @@ impl Display for CSI {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, FromPrimitive, ToPrimitive)]
+#[derive(Default)]
 pub enum CursorStyle {
+    #[default]
     Default = 0,
     BlinkingBlock = 1,
     SteadyBlock = 2,
@@ -262,11 +264,6 @@ pub enum CursorStyle {
     SteadyBar = 6,
 }
 
-impl Default for CursorStyle {
-    fn default() -> CursorStyle {
-        CursorStyle::Default
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum DeviceAttributeCodes {
@@ -297,11 +294,11 @@ pub struct DeviceAttributeFlags {
 
 impl DeviceAttributeFlags {
     fn emit(&self, f: &mut Formatter, leader: &str) -> Result<(), FmtError> {
-        write!(f, "{}", leader)?;
+        write!(f, "{leader}")?;
         for item in &self.attributes {
             match item {
-                DeviceAttribute::Code(c) => write!(f, ";{}", c.to_u16().ok_or_else(|| FmtError)?)?,
-                DeviceAttribute::Unspecified(param) => write!(f, ";{}", param)?,
+                DeviceAttribute::Code(c) => write!(f, ";{}", c.to_u16().ok_or(FmtError)?)?,
+                DeviceAttribute::Unspecified(param) => write!(f, ";{param}")?,
             }
         }
         write!(f, "c")?;
@@ -318,10 +315,10 @@ impl DeviceAttributeFlags {
             match i {
                 CsiParam::Integer(p) => match FromPrimitive::from_i64(*p) {
                     Some(c) => attributes.push(DeviceAttribute::Code(c)),
-                    None => attributes.push(DeviceAttribute::Unspecified(i.clone())),
+                    None => attributes.push(DeviceAttribute::Unspecified(*i)),
                 },
                 CsiParam::P(b';') => {}
-                _ => attributes.push(DeviceAttribute::Unspecified(i.clone())),
+                _ => attributes.push(DeviceAttribute::Unspecified(*i)),
             }
         }
         Self { attributes }
@@ -352,7 +349,7 @@ impl Display for XtSmGraphicsItem {
             Self::NumberOfColorRegisters => write!(f, "1"),
             Self::SixelGraphicsGeometry => write!(f, "2"),
             Self::RegisGraphicsGeometry => write!(f, "3"),
-            Self::Unspecified(n) => write!(f, "{}", n),
+            Self::Unspecified(n) => write!(f, "{n}"),
         }
     }
 }
@@ -485,7 +482,7 @@ impl Display for Device {
             Device::XtSmGraphics(g) => {
                 write!(f, "?{};{}", g.item, g.action_or_status)?;
                 for v in &g.value {
-                    write!(f, ";{}", v)?;
+                    write!(f, ";{v}")?;
                 }
                 write!(f, "S")?;
             }
@@ -591,7 +588,7 @@ pub enum Window {
 
 fn numstr_or_empty(x: &Option<i64>) -> String {
     match x {
-        Some(x) => format!("{}", x),
+        Some(x) => format!("{x}"),
         None => "".to_owned(),
     }
 }
@@ -601,7 +598,7 @@ impl Display for Window {
         match self {
             Window::DeIconify => write!(f, "1t"),
             Window::Iconify => write!(f, "2t"),
-            Window::MoveWindow { x, y } => write!(f, "3;{};{}t", x, y),
+            Window::MoveWindow { x, y } => write!(f, "3;{x};{y}t"),
             Window::ResizeWindowPixels { width, height } => write!(
                 f,
                 "4;{};{}t",
@@ -656,8 +653,7 @@ impl Display for Window {
                 right,
             } => write!(
                 f,
-                "{};{};{};{};{};{}*y",
-                request_id, page_number, top, left, bottom, right,
+                "{request_id};{page_number};{top};{left};{bottom};{right}*y",
             ),
         }
     }
@@ -723,7 +719,7 @@ impl Display for MouseReport {
                     | MouseButton::None => 'M',
                     _ => 'm',
                 };
-                write!(f, "<{};{};{}{}", b, x, y, trailer)
+                write!(f, "<{b};{x};{y}{trailer}")
             }
             MouseReport::SGR1016 {
                 x_pixels,
@@ -766,7 +762,7 @@ impl Display for MouseReport {
                     | MouseButton::None => 'M',
                     _ => 'm',
                 };
-                write!(f, "<{};{};{}{}", b, x_pixels, y_pixels, trailer)
+                write!(f, "<{b};{x_pixels};{y_pixels}{trailer}")
             }
         }
     }
@@ -834,17 +830,17 @@ impl Display for Mode {
             Mode::SaveDecPrivateMode(mode) => emit!("s", mode),
             Mode::RestoreDecPrivateMode(mode) => emit!("r", mode),
             Mode::QueryDecPrivateMode(DecPrivateMode::Code(mode)) => {
-                write!(f, "?{}$p", mode.to_u16().ok_or_else(|| FmtError)?)
+                write!(f, "?{}$p", mode.to_u16().ok_or(FmtError)?)
             }
             Mode::QueryDecPrivateMode(DecPrivateMode::Unspecified(mode)) => {
-                write!(f, "?{}$p", mode)
+                write!(f, "?{mode}$p")
             }
             Mode::SetMode(mode) => emit_mode!("h", mode),
             Mode::ResetMode(mode) => emit_mode!("l", mode),
             Mode::QueryMode(TerminalMode::Code(mode)) => {
-                write!(f, "?{}$p", mode.to_u16().ok_or_else(|| FmtError)?)
+                write!(f, "?{}$p", mode.to_u16().ok_or(FmtError)?)
             }
-            Mode::QueryMode(TerminalMode::Unspecified(mode)) => write!(f, "?{}$p", mode),
+            Mode::QueryMode(TerminalMode::Unspecified(mode)) => write!(f, "?{mode}$p"),
             Mode::XtermKeyMode { resource, value } => {
                 write!(
                     f,
@@ -857,7 +853,7 @@ impl Display for Mode {
                     }
                 )?;
                 if let Some(value) = value {
-                    write!(f, ";{}", value)?;
+                    write!(f, ";{value}")?;
                 } else {
                     write!(f, ";")?;
                 }
@@ -1238,10 +1234,10 @@ trait EncodeCSIParam {
 impl<T: ParamEnum + PartialEq + ToPrimitive> EncodeCSIParam for T {
     fn write_csi(&self, f: &mut Formatter, control: &str) -> Result<(), FmtError> {
         if *self == ParamEnum::default() {
-            write!(f, "{}", control)
+            write!(f, "{control}")
         } else {
-            let value = self.to_i64().ok_or_else(|| FmtError)?;
-            write!(f, "{}{}", value, control)
+            let value = self.to_i64().ok_or(FmtError)?;
+            write!(f, "{value}{control}")
         }
     }
 }
@@ -1249,7 +1245,7 @@ impl<T: ParamEnum + PartialEq + ToPrimitive> EncodeCSIParam for T {
 impl EncodeCSIParam for u32 {
     fn write_csi(&self, f: &mut Formatter, control: &str) -> Result<(), FmtError> {
         if *self == 1 {
-            write!(f, "{}", control)
+            write!(f, "{control}")
         } else {
             write!(f, "{}{}", *self, control)
         }
@@ -1259,7 +1255,7 @@ impl EncodeCSIParam for u32 {
 impl EncodeCSIParam for OneBased {
     fn write_csi(&self, f: &mut Formatter, control: &str) -> Result<(), FmtError> {
         if self.as_one_based() == 1 {
-            write!(f, "{}", control)
+            write!(f, "{control}")
         } else {
             write!(f, "{}{}", *self, control)
         }
@@ -1292,19 +1288,19 @@ impl Display for Cursor {
             Cursor::ForwardTabulation(n) => n.write_csi(f, "I")?,
             Cursor::NextLine(n) => n.write_csi(f, "E")?,
             Cursor::PrecedingLine(n) => n.write_csi(f, "F")?,
-            Cursor::ActivePositionReport { line, col } => write!(f, "{};{}R", line, col)?,
+            Cursor::ActivePositionReport { line, col } => write!(f, "{line};{col}R")?,
             Cursor::Left(n) => n.write_csi(f, "D")?,
             Cursor::Down(n) => n.write_csi(f, "B")?,
             Cursor::Right(n) => n.write_csi(f, "C")?,
             Cursor::Up(n) => n.write_csi(f, "A")?,
-            Cursor::Position { line, col } => write!(f, "{};{}H", line, col)?,
+            Cursor::Position { line, col } => write!(f, "{line};{col}H")?,
             Cursor::LineTabulation(n) => n.write_csi(f, "Y")?,
             Cursor::TabulationControl(n) => n.write_csi(f, "W")?,
             Cursor::TabulationClear(n) => n.write_csi(f, "g")?,
             Cursor::CharacterPositionAbsolute(n) => n.write_csi(f, "`")?,
             Cursor::CharacterPositionBackward(n) => n.write_csi(f, "j")?,
             Cursor::CharacterPositionForward(n) => n.write_csi(f, "a")?,
-            Cursor::CharacterAndLinePosition { line, col } => write!(f, "{};{}f", line, col)?,
+            Cursor::CharacterAndLinePosition { line, col } => write!(f, "{line};{col}f")?,
             Cursor::LinePositionAbsolute(n) => n.write_csi(f, "d")?,
             Cursor::LinePositionBackward(n) => n.write_csi(f, "k")?,
             Cursor::LinePositionForward(n) => n.write_csi(f, "e")?,
@@ -1312,14 +1308,14 @@ impl Display for Cursor {
                 if top.as_one_based() == 1 && bottom.as_one_based() == u32::max_value() {
                     write!(f, "r")?;
                 } else {
-                    write!(f, "{};{}r", top, bottom)?;
+                    write!(f, "{top};{bottom}r")?;
                 }
             }
             Cursor::SetLeftAndRightMargins { left, right } => {
                 if left.as_one_based() == 1 && right.as_one_based() == u32::max_value() {
                     write!(f, "s")?;
                 } else {
-                    write!(f, "{};{}s", left, right)?;
+                    write!(f, "{left};{right}s")?;
                 }
             }
             Cursor::RequestActivePositionReport => write!(f, "6n")?,
@@ -1773,7 +1769,7 @@ impl Cracked {
                     res.push(None);
                 }
                 CsiParam::Integer(_) => {
-                    res.push(Some(p.clone()));
+                    res.push(Some(*p));
                     if let Some(CsiParam::P(b';')) = iter.peek() {
                         iter.next();
                     }
@@ -2119,20 +2115,20 @@ impl<'a> CSIParser<'a> {
     fn xterm_key_modifier(&mut self, params: &'a [CsiParam]) -> Result<CSI, ()> {
         match params {
             [CsiParam::P(b'>'), a, CsiParam::P(b';'), b] => {
-                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or_else(|| ())?)
-                    .ok_or_else(|| ())?;
+                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or(())?)
+                    .ok_or(())?;
                 Ok(self.advance_by(
                     4,
                     params,
                     CSI::Mode(Mode::XtermKeyMode {
                         resource,
-                        value: Some(b.as_integer().ok_or_else(|| ())?),
+                        value: Some(b.as_integer().ok_or(())?),
                     }),
                 ))
             }
             [CsiParam::P(b'>'), a, CsiParam::P(b';')] => {
-                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or_else(|| ())?)
-                    .ok_or_else(|| ())?;
+                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or(())?)
+                    .ok_or(())?;
                 Ok(self.advance_by(
                     3,
                     params,
@@ -2143,8 +2139,8 @@ impl<'a> CSIParser<'a> {
                 ))
             }
             [CsiParam::P(b'>'), p] => {
-                let resource = XtermKeyModifierResource::parse(p.as_integer().ok_or_else(|| ())?)
-                    .ok_or_else(|| ())?;
+                let resource = XtermKeyModifierResource::parse(p.as_integer().ok_or(())?)
+                    .ok_or(())?;
                 Ok(self.advance_by(
                     2,
                     params,
@@ -2386,10 +2382,9 @@ impl<'a> CSIParser<'a> {
     }
 
     fn terminal_mode(&mut self, params: &'a [CsiParam]) -> Result<TerminalMode, ()> {
-        let p0 = params
-            .get(0)
+        let p0 = params.first()
             .and_then(CsiParam::as_integer)
-            .ok_or_else(|| ())?;
+            .ok_or(())?;
         match FromPrimitive::from_i64(p0) {
             None => {
                 Ok(self.advance_by(1, params, TerminalMode::Unspecified(p0.to_u16().ok_or(())?)))
@@ -2935,12 +2930,9 @@ impl<'a> Iterator for CSIParser<'a> {
     type Item = CSI;
 
     fn next(&mut self) -> Option<CSI> {
-        let params = match self.params.take() {
-            None => return None,
-            Some(params) => params,
-        };
+        let params = self.params.take()?;
 
-        match self.parse_next(&params) {
+        match self.parse_next(params) {
             Ok(csi) => Some(csi),
             Err(()) => Some(CSI::Unspecified(Box::new(Unspecified {
                 params: params.to_vec(),
@@ -2972,7 +2964,7 @@ mod test {
     fn encode(seq: &Vec<CSI>) -> String {
         let mut res = Vec::new();
         for s in seq {
-            write!(res, "{}", s).unwrap();
+            write!(res, "{s}").unwrap();
         }
         String::from_utf8(res).unwrap()
     }

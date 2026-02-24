@@ -86,7 +86,7 @@ impl Parser {
         let parser_state = self.state.borrow();
         let tmux_state = parser_state.tmux_state.as_ref().unwrap();
         let mut tmux_parser = tmux_state.borrow_mut();
-        return tmux_parser.advance_bytes(bytes);
+        tmux_parser.advance_bytes(bytes)
     }
 
     pub fn parse<F: FnMut(Action)>(&mut self, bytes: &[u8], mut callback: F) {
@@ -199,7 +199,7 @@ struct Performer<'a, F: FnMut(Action) + 'a> {
 }
 
 fn is_short_dcs(intermediates: &[u8], byte: u8) -> bool {
-    if intermediates == &[b'$'] && byte == b'q' {
+    if intermediates == [b'$'] && byte == b'q' {
         // DECRQSS
         true
     } else {
@@ -361,7 +361,7 @@ mod test {
     fn encode(seq: &Vec<Action>) -> String {
         let mut res = Vec::new();
         for s in seq {
-            write!(res, "{}", s).unwrap();
+            write!(res, "{s}").unwrap();
         }
         String::from_utf8(res).unwrap()
     }

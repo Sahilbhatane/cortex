@@ -17,7 +17,7 @@ fn main() -> Result<()> {
         }
 
         parser.parse(&buf[0..len], |action| match action {
-            Action::Print(c) => print!("{}", c),
+            Action::Print(c) => print!("{c}"),
             Action::Control(c) => match c {
                 ControlCode::HorizontalTab
                 | ControlCode::LineFeed

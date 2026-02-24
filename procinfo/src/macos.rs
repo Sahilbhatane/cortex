@@ -126,7 +126,7 @@ impl LocalProcessInfo {
         }
 
         fn cwd_for_pid(pid: libc::pid_t) -> PathBuf {
-            LocalProcessInfo::current_working_dir(pid as _).unwrap_or_else(PathBuf::new)
+            LocalProcessInfo::current_working_dir(pid as _).unwrap_or_default()
         }
 
         fn exe_and_args_for_pid_sysctl(pid: libc::pid_t) -> Option<(PathBuf, Vec<String>)> {
@@ -158,7 +158,7 @@ impl LocalProcessInfo {
         }
 
         fn exe_for_pid(pid: libc::pid_t) -> PathBuf {
-            LocalProcessInfo::executable_path(pid as _).unwrap_or_else(PathBuf::new)
+            LocalProcessInfo::executable_path(pid as _).unwrap_or_default()
         }
 
         let procs: Vec<_> = all_pids().into_iter().filter_map(info_for_pid).collect();
@@ -191,11 +191,7 @@ impl LocalProcessInfo {
             }
         }
 
-        if let Some(info) = procs.iter().find(|info| info.pbi_pid == pid) {
-            Some(build_proc(info, &procs))
-        } else {
-            None
-        }
+        procs.iter().find(|info| info.pbi_pid == pid).map(|info| build_proc(info, &procs))
     }
 }
 

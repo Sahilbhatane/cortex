@@ -131,7 +131,7 @@ fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenStrea
     };
 
     if info.debug {
-        eprintln!("{}", tokens);
+        eprintln!("{tokens}");
     }
     Ok(tokens)
 }
@@ -327,7 +327,7 @@ fn derive_enum(input: &DeriveInput, enumeration: &DataEnum) -> Result<TokenStrea
     };
 
     if info.debug {
-        eprintln!("{}", tokens);
+        eprintln!("{tokens}");
     }
     Ok(tokens)
 }

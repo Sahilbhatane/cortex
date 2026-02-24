@@ -112,7 +112,7 @@ impl TestTerm {
 
     fn delete_lines(&mut self, n: isize) {
         self.print(CSI);
-        self.print(format!("{}M", n));
+        self.print(format!("{n}M"));
     }
 
     fn cup(&mut self, col: isize, row: isize) {
@@ -127,17 +127,17 @@ impl TestTerm {
 
     fn erase_in_display(&mut self, erase: EraseInDisplay) {
         let csi = CSI::Edit(Edit::EraseInDisplay(erase));
-        self.print(format!("{}", csi));
+        self.print(format!("{csi}"));
     }
 
     fn erase_in_line(&mut self, erase: EraseInLine) {
         let csi = CSI::Edit(Edit::EraseInLine(erase));
-        self.print(format!("{}", csi));
+        self.print(format!("{csi}"));
     }
 
     fn hyperlink(&mut self, link: &Arc<Hyperlink>) {
         let osc = OperatingSystemCommand::SetHyperlink(Some(link.as_ref().clone()));
-        self.print(format!("{}", osc));
+        self.print(format!("{osc}"));
     }
 
     fn hyperlink_off(&mut self) {
@@ -293,7 +293,7 @@ fn print_visible_lines(term: &Terminal) {
 /// The other cell attributes are not compared; this is
 /// a convenience for writing visually understandable tests.
 fn assert_visible_contents(term: &Terminal, file: &str, line: u32, expect_lines: &[&str]) {
-    print_visible_lines(&term);
+    print_visible_lines(term);
     let screen = term.screen();
 
     let expect: Vec<Line> = expect_lines.iter().map(|s| (*s).into()).collect();
@@ -302,7 +302,7 @@ fn assert_visible_contents(term: &Terminal, file: &str, line: u32, expect_lines:
 }
 
 fn assert_all_contents(term: &Terminal, file: &str, line: u32, expect_lines: &[&str]) {
-    print_all_lines(&term);
+    print_all_lines(term);
     let screen = term.screen();
 
     let expect: Vec<Line> = expect_lines.iter().map(|s| (*s).into()).collect();
@@ -1131,7 +1131,7 @@ fn test_scroll_margins() {
         top: OneBased::new(1),
         bottom: OneBased::new(2),
     });
-    term.print(format!("{}", margins));
+    term.print(format!("{margins}"));
 
     term.print("z\n");
     assert_all_contents(&term, file!(), line!(), &["1", "2", "z", "4", ""]);

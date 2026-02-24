@@ -14,7 +14,7 @@ fn main() -> Result<(), Error> {
     terminal.set_raw_mode()?;
 
     while let Some(event) = terminal.poll_input(None)? {
-        print!("{:?}\r\n", event);
+        print!("{event:?}\r\n");
         if event == InputEvent::Key(CTRL_C) {
             break;
         }

@@ -45,7 +45,7 @@ fn emit_column<W: std::io::Write>(
     for _ in 0..left_pad {
         write!(output, " ")?;
     }
-    write!(output, "{}", text)?;
+    write!(output, "{text}")?;
     for _ in 0..right_pad {
         write!(output, " ")?;
     }
@@ -225,7 +225,7 @@ pub fn tabulate_output_as_string<S: std::string::ToString>(
     let mut output: Vec<u8> = vec![];
     tabulate_output(columns, rows, &mut output)?;
     String::from_utf8(output)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("{}", e)))
+        .map_err(|e| std::io::Error::other(format!("{e}")))
 }
 
 #[cfg(test)]
@@ -251,7 +251,7 @@ mod test {
         let data = vec![vec!["one", "i", "two"], vec!["longer", "boo", "again"]];
 
         let output = tabulate_output_as_string(&cols, &data).unwrap();
-        eprintln!("output is:\n{}", output);
+        eprintln!("output is:\n{output}");
         assert_eq!(
             output,
             "hello  middle-of-me world\n\

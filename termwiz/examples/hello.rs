@@ -47,16 +47,16 @@ fn main() -> Result<(), Error> {
                     key: KeyCode::Char(c),
                     ..
                 }) => {
-                    buf.add_change(format!("{}", c));
+                    buf.add_change(format!("{c}"));
                     buf.flush()?;
                 }
                 _ => {
-                    print!("{:?}\r\n", input);
+                    print!("{input:?}\r\n");
                 }
             },
             Ok(None) => {}
             Err(e) => {
-                print!("{:?}\r\n", e);
+                print!("{e:?}\r\n");
                 break;
             }
         }

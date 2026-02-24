@@ -76,7 +76,7 @@ fn derive_struct(input: &DeriveInput, fields: &FieldsNamed) -> Result<TokenStrea
     };
 
     if info.debug {
-        eprintln!("{}", tokens);
+        eprintln!("{tokens}");
     }
     Ok(tokens)
 }
@@ -148,7 +148,7 @@ fn derive_enum(input: &DeriveInput, enumeration: &DataEnum) -> Result<TokenStrea
                             .unnamed
                             .iter()
                             .enumerate()
-                            .map(|(idx, _f)| Ident::new(&format!("f{}", idx), Span::call_site()))
+                            .map(|(idx, _f)| Ident::new(&format!("f{idx}"), Span::call_site()))
                             .collect::<Vec<_>>();
 
                         let hint = var_fields.len();
@@ -206,7 +206,7 @@ fn derive_enum(input: &DeriveInput, enumeration: &DataEnum) -> Result<TokenStrea
     };
 
     if info.debug {
-        eprintln!("{}", tokens);
+        eprintln!("{tokens}");
     }
     Ok(tokens)
 }

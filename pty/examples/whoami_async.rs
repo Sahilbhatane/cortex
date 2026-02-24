@@ -43,7 +43,7 @@ fn main() -> anyhow::Result<()> {
             "child status: {:?}",
             smol::unblock(move || child
                 .wait()
-                .map_err(|e| anyhow!("waiting for child: {}", e)))
+                .map_err(|e| anyhow!("waiting for child: {e}")))
             .await?
         );
 
@@ -56,14 +56,14 @@ fn main() -> anyhow::Result<()> {
 
         let mut lines = smol::io::BufReader::new(smol::Unblock::new(reader)).lines();
         while let Some(line) = lines.next().await {
-            let line = line.map_err(|e| anyhow!("problem reading line: {}", e))?;
+            let line = line.map_err(|e| anyhow!("problem reading line: {e}"))?;
             // We print with escapes escaped because the windows conpty
             // implementation synthesizes title change escape sequences
             // in the output stream and it can be confusing to see those
             // printed out raw in another terminal.
             print!("output: len={} ", line.len());
             for c in line.escape_debug() {
-                print!("{}", c);
+                print!("{c}");
             }
             println!();
         }

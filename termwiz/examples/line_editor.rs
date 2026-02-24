@@ -99,7 +99,7 @@ fn main() -> termwiz::Result<()> {
     let mut host = Host::default();
     loop {
         if let Some(line) = editor.read_line(&mut host)? {
-            println!("read line: {:?}", line);
+            println!("read line: {line:?}");
             if line == "exit" {
                 break;
             }

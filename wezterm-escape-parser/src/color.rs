@@ -59,9 +59,9 @@ pub struct RgbColor {
     bits: u32,
 }
 
-impl Into<SrgbaTuple> for RgbColor {
-    fn into(self) -> SrgbaTuple {
-        self.to_tuple_rgba()
+impl From<RgbColor> for SrgbaTuple {
+    fn from(val: RgbColor) -> Self {
+        val.to_tuple_rgba()
     }
 }
 
@@ -123,15 +123,14 @@ impl RgbColor {
     /// Returns a string of the form `#RRGGBB`
     pub fn to_rgb_string(self) -> String {
         let (red, green, blue) = self.to_tuple_rgb8();
-        format!("#{:02x}{:02x}{:02x}", red, green, blue)
+        format!("#{red:02x}{green:02x}{blue:02x}")
     }
 
     /// Returns a string of the form `rgb:RRRR/GGGG/BBBB`
     pub fn to_x11_16bit_rgb_string(self) -> String {
         let (red, green, blue) = self.to_tuple_rgb8();
         format!(
-            "rgb:{:02x}{:02x}/{:02x}{:02x}/{:02x}{:02x}",
-            red, red, green, green, blue, blue
+            "rgb:{red:02x}{red:02x}/{green:02x}{green:02x}/{blue:02x}{blue:02x}"
         )
     }
 
@@ -157,7 +156,7 @@ impl RgbColor {
     /// The list of names can be found here:
     /// <https://ogeon.github.io/docs/palette/master/palette/named/index.html>
     pub fn from_named_or_rgb_string(s: &str) -> Option<Self> {
-        RgbColor::from_rgb_str(&s).or_else(|| RgbColor::from_named(&s))
+        RgbColor::from_rgb_str(s).or_else(|| RgbColor::from_named(s))
     }
 }
 
@@ -194,7 +193,7 @@ impl<'de> Deserialize<'de> for RgbColor {
     {
         let s = String::deserialize(deserializer)?;
         RgbColor::from_named_or_rgb_string(&s)
-            .ok_or_else(|| format!("unknown color name: {}", s))
+            .ok_or_else(|| format!("unknown color name: {s}"))
             .map_err(serde::de::Error::custom)
     }
 }
@@ -212,7 +211,7 @@ impl FromDynamic for RgbColor {
     ) -> Result<Self, wezterm_dynamic::Error> {
         let s = String::from_dynamic(value, options)?;
         Ok(RgbColor::from_named_or_rgb_string(&s)
-            .ok_or_else(|| format!("unknown color name: {}", s))?)
+            .ok_or_else(|| format!("unknown color name: {s}"))?)
     }
 }
 
@@ -224,18 +223,15 @@ pub type PaletteIndex = u8;
 /// specify one of the possible color types at once, whereas the
 /// `ColorAttribute` type can specify a TrueColor value and a fallback.
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Default)]
 pub enum ColorSpec {
+    #[default]
     Default,
     /// Use either a raw number, or use values from the `AnsiColor` enum
     PaletteIndex(PaletteIndex),
     TrueColor(SrgbaTuple),
 }
 
-impl Default for ColorSpec {
-    fn default() -> Self {
-        ColorSpec::Default
-    }
-}
 
 impl From<AnsiColor> for ColorSpec {
     fn from(col: AnsiColor) -> Self {

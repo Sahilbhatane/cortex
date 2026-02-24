@@ -94,7 +94,7 @@ impl Drop for NotifDelegate {
 }
 
 const CENTER: LazyLock<Retained<UNUserNotificationCenter>> =
-    LazyLock::new(|| UNUserNotificationCenter::currentNotificationCenter());
+    LazyLock::new(UNUserNotificationCenter::currentNotificationCenter);
 
 pub fn initialize() {
     static INIT: Once = Once::new();
@@ -158,7 +158,7 @@ pub fn show_notif(toast: ToastNotification) -> Result<(), Box<dyn std::error::Er
 
         if let Some(url) = &toast.url {
             let info =
-                NSDictionary::from_slices(&[ns_string!("url")], &[&*NSString::from_str(&url)]);
+                NSDictionary::from_slices(&[ns_string!("url")], &[&*NSString::from_str(url)]);
             notif.setUserInfo(
                 info.downcast_ref::<NSDictionary>()
                     .expect("is NSDictionary"),
@@ -169,12 +169,12 @@ pub fn show_notif(toast: ToastNotification) -> Result<(), Box<dyn std::error::Er
         let identifier = uuid::Uuid::new_v4().to_string();
         let request = UNNotificationRequest::requestWithIdentifier_content_trigger(
             &NSString::from_str(&identifier),
-            &*notif,
+            &notif,
             None,
         );
 
         CENTER.addNotificationRequest_withCompletionHandler(
-            &*request,
+            &request,
             Some(&RcBlock::new(move |err: *mut NSError| {
                 if err.is_null() {
                     if let Some(timeout) = toast.timeout {

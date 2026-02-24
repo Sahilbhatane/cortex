@@ -105,7 +105,7 @@ impl core::fmt::Display for Hyperlink {
             if idx > 0 {
                 write!(f, ":")?;
             }
-            write!(f, "{}={}", k, v)?;
+            write!(f, "{k}={v}")?;
         }
         // TODO: ensure that link.uri doesn't contain characters
         // outside the range 32-126.  Need to pull in a URI/URL

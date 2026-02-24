@@ -22,10 +22,20 @@ impl<T> __BindgenUnionField<T> {
     pub const fn new() -> Self {
         __BindgenUnionField(::std::marker::PhantomData)
     }
+    /// Returns a reference to the union field.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the union currently holds a value of type `T`.
     #[inline]
     pub unsafe fn as_ref(&self) -> &T {
         ::std::mem::transmute(self)
     }
+    /// Returns a mutable reference to the union field.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the union currently holds a value of type `T`.
     #[inline]
     pub unsafe fn as_mut(&mut self) -> &mut T {
         ::std::mem::transmute(self)

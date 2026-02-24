@@ -34,7 +34,7 @@ mod nop {
 
 pub fn show(notif: ToastNotification) {
     if let Err(err) = backend::show_notif(notif) {
-        log::error!("Failed to show notification: {}", err);
+        log::error!("Failed to show notification: {err}");
     }
 }
 

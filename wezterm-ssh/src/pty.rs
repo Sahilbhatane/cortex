@@ -169,7 +169,7 @@ impl portable_pty::ChildKiller for SshChildProcess {
                 channel: self.channel,
                 signame: "HUP",
             }))
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| std::io::Error::other(e.to_string()))?;
         }
         Ok(())
     }
@@ -195,7 +195,7 @@ impl portable_pty::ChildKiller for SshChildKiller {
                 channel: self.channel,
                 signame: "HUP",
             }))
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+            .map_err(|e| std::io::Error::other(e.to_string()))?;
         }
         Ok(())
     }
@@ -221,7 +221,7 @@ impl crate::sessioninner::SessionInner {
         if let Some("yes") = self.config.get("forwardagent").map(|s| s.as_str()) {
             if self.identity_agent().is_some() {
                 if let Err(err) = channel.request_auth_agent_forwarding() {
-                    log::error!("Failed to request agent forwarding: {:#}", err);
+                    log::error!("Failed to request agent forwarding: {err:#}");
                 }
             }
         }
@@ -236,22 +236,16 @@ impl crate::sessioninner::SessionInner {
                     // prevent the connection from being set up.
                     if !self.shown_accept_env_error {
                         log::warn!(
-                            "ssh: setenv {}={} failed: {}. \
+                            "ssh: setenv {key}={val} failed: {err}. \
                             Check the AcceptEnv setting on the ssh server side. \
                             Additional errors with setting env vars in this \
-                            session will be logged at debug log level.",
-                            key,
-                            val,
-                            err
+                            session will be logged at debug log level."
                         );
                         self.shown_accept_env_error = true;
                     } else {
                         log::debug!(
-                            "ssh: setenv {}={} failed: {}. \
-                             Check the AcceptEnv setting on the ssh server side.",
-                            key,
-                            val,
-                            err
+                            "ssh: setenv {key}={val} failed: {err}. \
+                             Check the AcceptEnv setting on the ssh server side."
                         );
                     }
                 }
