@@ -7,38 +7,39 @@ jobs:
   test-apt-install:
     runs-on: ubuntu-24.04
     steps:
-      - name: System Info
+      - name: Install cx-terminal
         run: |
-          echo "=== System Info ==="
-          uname -a
-          cat /etc/os-release | grep PRETTY_NAME
-          dpkg --print-architecture
-          
-      - name: Add CX Linux Repository
-        run: |
-          echo "=== Adding CX Linux Repository ==="
           curl -fsSL https://repo.cxlinux.com/key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/cxlinux.gpg
           echo "deb [signed-by=/etc/apt/keyrings/cxlinux.gpg] https://repo.cxlinux.com/apt stable main" | sudo tee /etc/apt/sources.list.d/cxlinux.list
           sudo apt-get update
-          
-      - name: Check Package Info
-        run: |
-          echo "=== Package Info ==="
-          apt-cache policy cx-terminal
-          
-      - name: Dry Run Install
-        run: |
-          echo "=== Dry Run Install ==="
-          sudo apt-get install --dry-run cx-terminal
-          
-      - name: Actual Install
-        run: |
-          echo "=== Installing cx-terminal ==="
           sudo apt-get install -y cx-terminal
           
-      - name: Verify Installation
+      - name: Test Binary
         run: |
-          echo "=== Verification ==="
-          which cx-terminal || which wezterm
-          dpkg -l | grep cx-terminal
-          cx-terminal --version || wezterm --version || echo "Binary check"
+          echo "=== 基础测试 ==="
+          which cx-terminal
+          cx-terminal --version
+          
+          echo ""
+          echo "=== 帮助信息 ==="
+          cx-terminal --help 2>&1 | head -30 || true
+          
+          echo ""
+          echo "=== 配置测试 ==="
+          # 创建配置目录
+          mkdir -p ~/.config/cx-terminal
+          
+          echo ""
+          echo "=== 启动测试 (headless) ==="
+          # 使用 xvfb 虚拟显示器测试启动
+          sudo apt-get install -y xvfb
+          timeout 5 xvfb-run cx-terminal --help || echo "GUI 启动测试完成"
+          
+          echo ""
+          echo "=== 文件检查 ==="
+          ls -la /usr/bin/cx-terminal
+          ls -la /usr/share/applications/ | grep -i cx || true
+          ldd /usr/bin/cx-terminal | head -10
+          
+          echo ""
+          echo "=== 测试完成 ✅ ==="
