@@ -168,7 +168,8 @@ END
             .join("CX Terminal.app")
             .join("Contents")
             .join("Info.plist");
-        let build_target_dir = std::env::var("CARGO_TARGET_DIR").map(std::path::PathBuf::from)
+        let build_target_dir = std::env::var("CARGO_TARGET_DIR")
+            .map(std::path::PathBuf::from)
             .unwrap_or(repo_dir.join("target").join(profile));
         let dest_plist = build_target_dir.join("Info.plist");
         println!("cargo:rerun-if-changed=assets/macos/CX Terminal.app/Contents/Info.plist");

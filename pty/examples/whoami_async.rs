@@ -41,10 +41,8 @@ fn main() -> anyhow::Result<()> {
 
         println!(
             "child status: {:?}",
-            smol::unblock(move || child
-                .wait()
-                .map_err(|e| anyhow!("waiting for child: {e}")))
-            .await?
+            smol::unblock(move || child.wait().map_err(|e| anyhow!("waiting for child: {e}")))
+                .await?
         );
 
         let reader = pair.master.try_clone_reader()?;

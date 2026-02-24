@@ -200,8 +200,7 @@ impl OwnedHandle {
         }
     }
 
-    pub(crate) fn probe_handle_type(_handle: RawFileDescriptor) -> HandleType {
-    }
+    pub(crate) fn probe_handle_type(_handle: RawFileDescriptor) -> HandleType {}
 }
 
 impl std::io::Read for FileDescriptor {

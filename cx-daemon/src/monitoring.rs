@@ -4,6 +4,7 @@
 
 use crate::alerts::{Alert, AlertDatabase, AlertSeverity};
 use anyhow::Result;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 /// System health metrics

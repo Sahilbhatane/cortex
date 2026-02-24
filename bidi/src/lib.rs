@@ -1073,9 +1073,7 @@ impl BidiContext {
     /// as well as any neutral types.
     fn is_prior_context_left(&self, index_idx: usize, indices: &[usize], sot: BidiClass) -> bool {
         if index_idx == 0 {
-            trace!(
-                "is_prior_context_left: short circuit because index_idx=0. sot is {sot:?}"
-            );
+            trace!("is_prior_context_left: short circuit because index_idx=0. sot is {sot:?}");
             return sot == BidiClass::LeftToRight;
         }
         for &idx in indices[0..index_idx].iter().rev() {
@@ -1124,9 +1122,7 @@ impl BidiContext {
             }
             return false;
         }
-        trace!(
-            "is_following_context_left fall through to bottom, check against eot={eot:?}"
-        );
+        trace!("is_following_context_left fall through to bottom, check against eot={eot:?}");
         eot == BidiClass::LeftToRight
     }
 
@@ -1460,8 +1456,7 @@ impl BidiContext {
                         // Do nothing
                     } else if overflow_embedding > 0 {
                         overflow_embedding -= 1;
-                    } else if !stack.isolate_status()
-                    && stack.depth() >= 2 {
+                    } else if !stack.isolate_status() && stack.depth() >= 2 {
                         stack.pop();
                     }
                 }
@@ -1794,9 +1789,7 @@ fn span_one_run(types: &[BidiClass], levels: &[Level], start: usize) -> (Level, 
     let mut isolate_init_found = false;
     let mut span_len = 0;
 
-    trace!(
-        "span_one_run called with types: {types:?}, levels: {levels:?}, start={start}"
-    );
+    trace!("span_one_run called with types: {types:?}, levels: {levels:?}, start={start}");
 
     for (idx, (bc, level)) in types
         .iter()
@@ -1804,9 +1797,7 @@ fn span_one_run(types: &[BidiClass], levels: &[Level], start: usize) -> (Level, 
         .zip(levels.iter().skip(start))
         .enumerate()
     {
-        trace!(
-            "span_one_run: consider idx={idx} bc={bc:?} level={level:?}"
-        );
+        trace!("span_one_run: consider idx={idx} bc={bc:?} level={level:?}");
         if !level.removed_by_x9() {
             if bc.is_iso_init() {
                 isolate_init_found = true;

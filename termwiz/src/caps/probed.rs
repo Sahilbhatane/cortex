@@ -114,8 +114,10 @@ impl<'a> ProbeCapabilities<'a> {
         let is_tmux = xt_version.is_tmux();
 
         // some tmux versions have their rows/cols swapped in ReportTextAreaSizeCells
-        let swapped_cols_rows =
-            matches!(xt_version.full_version(), "tmux 3.2" | "tmux 3.2a" | "tmux 3.3" | "tmux 3.3a");
+        let swapped_cols_rows = matches!(
+            xt_version.full_version(),
+            "tmux 3.2" | "tmux 3.2a" | "tmux 3.3" | "tmux 3.3a"
+        );
 
         let query_cells = CSI::Window(Box::new(Window::ReportTextAreaSizeCells));
         let query_pixels = CSI::Window(Box::new(Window::ReportCellSizePixels));

@@ -129,9 +129,7 @@ impl RgbColor {
     /// Returns a string of the form `rgb:RRRR/GGGG/BBBB`
     pub fn to_x11_16bit_rgb_string(self) -> String {
         let (red, green, blue) = self.to_tuple_rgb8();
-        format!(
-            "rgb:{red:02x}{red:02x}/{green:02x}{green:02x}/{blue:02x}{blue:02x}"
-        )
+        format!("rgb:{red:02x}{red:02x}/{green:02x}{green:02x}/{blue:02x}{blue:02x}")
     }
 
     /// Construct a color from a string of the form `#RRGGBB` where
@@ -222,8 +220,7 @@ pub type PaletteIndex = u8;
 /// This differs from `ColorAttribute` in that this type can only
 /// specify one of the possible color types at once, whereas the
 /// `ColorAttribute` type can specify a TrueColor value and a fallback.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
 pub enum ColorSpec {
     #[default]
     Default,
@@ -231,7 +228,6 @@ pub enum ColorSpec {
     PaletteIndex(PaletteIndex),
     TrueColor(SrgbaTuple),
 }
-
 
 impl From<AnsiColor> for ColorSpec {
     fn from(col: AnsiColor) -> Self {

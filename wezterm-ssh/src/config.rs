@@ -212,9 +212,7 @@ impl ParsedConfigFile {
                         }
                     }
                     None => {
-                        log::error!(
-                            "error expanding `Include {pattern}`: unable to determine cwd"
-                        );
+                        log::error!("error expanding `Include {pattern}`: unable to determine cwd");
                     }
                 }
             }
@@ -792,10 +790,12 @@ impl Config {
                 for c in &group.criteria {
                     if let Criteria::Host(patterns) = c {
                         for pattern in patterns {
-                            if pattern.is_literal && !pattern.negated
-                                && !hosts.contains(&pattern.original) {
-                                    hosts.push(pattern.original.clone());
-                                }
+                            if pattern.is_literal
+                                && !pattern.negated
+                                && !hosts.contains(&pattern.original)
+                            {
+                                hosts.push(pattern.original.clone());
+                            }
                         }
                     }
                 }

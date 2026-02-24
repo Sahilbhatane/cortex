@@ -105,10 +105,14 @@ fn run_fire_with_hrm(cmd: FireCommand) -> Result<()> {
 
         // Print header
         println!();
-        println!("  {}┌─ CX Linux Agent Termination ────────────────────────────────────────┐{}", 
-            theme.primary.ansi_fg, "\x1b[0m");
-        println!("  {}│                                                                      │{}", 
-            theme.primary.ansi_fg, "\x1b[0m");
+        println!(
+            "  {}┌─ CX Linux Agent Termination ────────────────────────────────────────┐{}",
+            theme.primary.ansi_fg, "\x1b[0m"
+        );
+        println!(
+            "  {}│                                                                      │{}",
+            theme.primary.ansi_fg, "\x1b[0m"
+        );
 
         println!();
         println!("  ⚠️  Termination Request");
@@ -128,7 +132,8 @@ fn run_fire_with_hrm(cmd: FireCommand) -> Result<()> {
             .unwrap_or_else(|_| "postgres://localhost/cx_agents".to_string());
 
         // Create database connection and repository
-        let db_conn = DatabaseConnection::new(&db_url).await
+        let db_conn = DatabaseConnection::new(&db_url)
+            .await
             .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
         let repository = PostgresAgentRepository::new(db_conn);
 
@@ -158,15 +163,20 @@ fn run_fire_with_hrm(cmd: FireCommand) -> Result<()> {
             println!("  🔍 Validating termination (dry run)...");
         }
 
-        let results = service.fire_agent(&hrm_cmd).await
+        let results = service
+            .fire_agent(&hrm_cmd)
+            .await
             .map_err(|e| anyhow::anyhow!("Termination failed: {}", e))?;
 
         println!();
-        
+
         if results.is_empty() {
             println!("  ❌ No agents were terminated (cancelled or not found)");
         } else {
-            println!("  {}✅ Termination complete!{}", theme.success.ansi_fg, "\x1b[0m");
+            println!(
+                "  {}✅ Termination complete!{}",
+                theme.success.ansi_fg, "\x1b[0m"
+            );
             println!();
             println!("  Agents terminated: {}", results.len());
             for status in &results {

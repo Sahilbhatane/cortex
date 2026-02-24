@@ -460,10 +460,7 @@ impl Display for SixelData {
                 hue_angle,
                 lightness,
                 saturation,
-            } => write!(
-                f,
-                "#{color_number};1;{hue_angle};{lightness};{saturation}"
-            ),
+            } => write!(f, "#{color_number};1;{hue_angle};{lightness};{saturation}"),
             Self::SelectColorMapEntry(n) => write!(f, "#{n}"),
             Self::CarriageReturn => write!(f, "$"),
             Self::NewLine => write!(f, "-"),

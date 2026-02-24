@@ -139,10 +139,14 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
 
         // Print header
         println!();
-        println!("  {}┌─ CX Linux Agent Deployment ─────────────────────────────────────────┐{}", 
-            theme.primary.ansi_fg, "\x1b[0m");
-        println!("  {}│                                                                      │{}", 
-            theme.primary.ansi_fg, "\x1b[0m");
+        println!(
+            "  {}┌─ CX Linux Agent Deployment ─────────────────────────────────────────┐{}",
+            theme.primary.ansi_fg, "\x1b[0m"
+        );
+        println!(
+            "  {}│                                                                      │{}",
+            theme.primary.ansi_fg, "\x1b[0m"
+        );
 
         println!();
         println!("  📋 Deployment Request");
@@ -176,7 +180,8 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
             .unwrap_or_else(|_| "postgres://localhost/cx_agents".to_string());
 
         // Create database connection and repository
-        let db_conn = DatabaseConnection::new(&db_url).await
+        let db_conn = DatabaseConnection::new(&db_url)
+            .await
             .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
         let repository = PostgresAgentRepository::new(db_conn);
 
@@ -203,11 +208,16 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
         // Deploy agent
         println!("  🚀 Deploying agent...");
 
-        let result = service.hire_agent(&hrm_cmd).await
+        let result = service
+            .hire_agent(&hrm_cmd)
+            .await
             .map_err(|e| anyhow::anyhow!("Deployment failed: {}", e))?;
 
         println!();
-        println!("  {}✅ Agent deployed successfully!{}", theme.success.ansi_fg, "\x1b[0m");
+        println!(
+            "  {}✅ Agent deployed successfully!{}",
+            theme.success.ansi_fg, "\x1b[0m"
+        );
         println!();
         println!("  Agent ID:    {}", result.agent_id);
         println!("  Server:      {}", result.server_id);

@@ -146,9 +146,7 @@ fn bidi_character_test() {
 
     println!("level_passes={level_passes} level_fails={level_fails}");
     println!("para_passes={para_passes} para_fails={para_fails}");
-    println!(
-        "reorder_passes={reorder_passes} reorder_fails={reorder_fails}"
-    );
+    println!("reorder_passes={reorder_passes} reorder_fails={reorder_fails}");
     assert_eq!(level_fails + para_fails + reorder_fails, 0);
     assert_eq!(level_passes, 91707);
     assert_eq!(reorder_passes, 91707);
@@ -263,9 +261,7 @@ fn bidi_test() {
     }
 
     println!("levels: {level_passes} passed, {level_fails} failed");
-    println!(
-        "reorders: {reorder_passes} passed, {reorder_fails} failed"
-    );
+    println!("reorders: {reorder_passes} passed, {reorder_fails} failed");
 
     assert_eq!(level_fails, 0);
     assert_eq!(level_passes, 770241);

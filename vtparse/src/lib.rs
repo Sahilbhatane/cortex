@@ -336,8 +336,7 @@ impl OscState {
             }
         } else if !self.full {
             let mut buf = [0u8; 8];
-            self
-                .buffer
+            self.buffer
                 .extend_from_slice(param.encode_utf8(&mut buf).as_bytes());
 
             #[cfg(all(not(feature = "std"), not(feature = "alloc")))]
@@ -838,9 +837,7 @@ mod test {
 
     #[test]
     fn test_osc_too_many_params() {
-        let fields = (0..MAX_OSC + 2)
-            .map(|i| i.to_string())
-            .collect::<Vec<_>>();
+        let fields = (0..MAX_OSC + 2).map(|i| i.to_string()).collect::<Vec<_>>();
         let input = format!("\x1b]{}\x07", fields.join(";"));
         let actions = parse_as_vec(input.as_bytes());
         assert_eq!(actions.len(), 1);

@@ -158,9 +158,7 @@ impl OperatingSystemCommand {
             for slice in osc {
                 vec.push(slice.to_vec());
             }
-            log::trace!(
-                "OSC internal parse err: {err}, track as Unspecified {vec:?}"
-            );
+            log::trace!("OSC internal parse err: {err}, track as Unspecified {vec:?}");
             OperatingSystemCommand::Unspecified(vec)
         })
     }

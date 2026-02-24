@@ -150,9 +150,7 @@ impl smol::io::AsyncRead for File {
         buf: &mut [u8],
     ) -> Poll<io::Result<usize>> {
         async fn read(tx: SessionSender, file_id: usize, len: usize) -> io::Result<Vec<u8>> {
-            inner_read(tx, file_id, len)
-                .await
-                .map_err(io::Error::other)
+            inner_read(tx, file_id, len).await.map_err(io::Error::other)
         }
         let tx = self.tx.as_ref().unwrap().clone();
         let file_id = self.file_id;
@@ -211,9 +209,7 @@ impl smol::io::AsyncWrite for File {
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         async fn flush(tx: SessionSender, file_id: usize) -> io::Result<()> {
-            inner_flush(tx, file_id)
-                .await
-                .map_err(io::Error::other)
+            inner_flush(tx, file_id).await.map_err(io::Error::other)
         }
 
         let tx = self.tx.as_ref().unwrap().clone();
@@ -234,9 +230,7 @@ impl smol::io::AsyncWrite for File {
 
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         async fn close(tx: SessionSender, file_id: usize) -> io::Result<()> {
-            inner_close(tx, file_id)
-                .await
-                .map_err(io::Error::other)
+            inner_close(tx, file_id).await.map_err(io::Error::other)
         }
 
         let tx = self.tx.as_ref().unwrap().clone();

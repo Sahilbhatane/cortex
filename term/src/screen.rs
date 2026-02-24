@@ -652,9 +652,7 @@ impl Screen {
         let scrollback_ok = scroll_region.start == 0 && self.allow_scrollback;
         let insert_at_end = scroll_region.end as usize == self.physical_rows;
 
-        debug!(
-            "scroll_up {scroll_region:?} num_rows={num_rows} phys_scroll={phys_scroll:?}"
-        );
+        debug!("scroll_up {scroll_region:?} num_rows={num_rows} phys_scroll={phys_scroll:?}");
         // Invalidate the lines that will move before they move so that
         // the indices of the lines are stable (we may remove lines below)
         // We only need invalidate if the StableRowIndex of the row would be

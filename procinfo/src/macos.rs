@@ -191,7 +191,10 @@ impl LocalProcessInfo {
             }
         }
 
-        procs.iter().find(|info| info.pbi_pid == pid).map(|info| build_proc(info, &procs))
+        procs
+            .iter()
+            .find(|info| info.pbi_pid == pid)
+            .map(|info| build_proc(info, &procs))
     }
 }
 

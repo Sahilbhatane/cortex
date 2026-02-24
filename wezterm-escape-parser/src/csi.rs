@@ -251,8 +251,7 @@ impl Display for CSI {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, FromPrimitive, ToPrimitive)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, FromPrimitive, ToPrimitive, Default)]
 pub enum CursorStyle {
     #[default]
     Default = 0,
@@ -263,7 +262,6 @@ pub enum CursorStyle {
     BlinkingBar = 5,
     SteadyBar = 6,
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum DeviceAttributeCodes {
@@ -2115,8 +2113,8 @@ impl<'a> CSIParser<'a> {
     fn xterm_key_modifier(&mut self, params: &'a [CsiParam]) -> Result<CSI, ()> {
         match params {
             [CsiParam::P(b'>'), a, CsiParam::P(b';'), b] => {
-                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or(())?)
-                    .ok_or(())?;
+                let resource =
+                    XtermKeyModifierResource::parse(a.as_integer().ok_or(())?).ok_or(())?;
                 Ok(self.advance_by(
                     4,
                     params,
@@ -2127,8 +2125,8 @@ impl<'a> CSIParser<'a> {
                 ))
             }
             [CsiParam::P(b'>'), a, CsiParam::P(b';')] => {
-                let resource = XtermKeyModifierResource::parse(a.as_integer().ok_or(())?)
-                    .ok_or(())?;
+                let resource =
+                    XtermKeyModifierResource::parse(a.as_integer().ok_or(())?).ok_or(())?;
                 Ok(self.advance_by(
                     3,
                     params,
@@ -2139,8 +2137,8 @@ impl<'a> CSIParser<'a> {
                 ))
             }
             [CsiParam::P(b'>'), p] => {
-                let resource = XtermKeyModifierResource::parse(p.as_integer().ok_or(())?)
-                    .ok_or(())?;
+                let resource =
+                    XtermKeyModifierResource::parse(p.as_integer().ok_or(())?).ok_or(())?;
                 Ok(self.advance_by(
                     2,
                     params,
@@ -2382,9 +2380,7 @@ impl<'a> CSIParser<'a> {
     }
 
     fn terminal_mode(&mut self, params: &'a [CsiParam]) -> Result<TerminalMode, ()> {
-        let p0 = params.first()
-            .and_then(CsiParam::as_integer)
-            .ok_or(())?;
+        let p0 = params.first().and_then(CsiParam::as_integer).ok_or(())?;
         match FromPrimitive::from_i64(p0) {
             None => {
                 Ok(self.advance_by(1, params, TerminalMode::Unspecified(p0.to_u16().ok_or(())?)))

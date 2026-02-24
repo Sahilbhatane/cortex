@@ -197,10 +197,12 @@ impl KittyImageData {
         }
 
         match self {
-            Self::Direct(data) => base64_decode(data).map_err(|err| std::io::Error::new(
+            Self::Direct(data) => base64_decode(data).map_err(|err| {
+                std::io::Error::new(
                     std::io::ErrorKind::InvalidInput,
                     format!("base64 decode: {err:#}"),
-                )),
+                )
+            }),
             Self::DirectBin(bin) => Ok(bin),
             Self::File {
                 path,
@@ -274,9 +276,7 @@ fn read_shared_memory_data(
     )
     .map_err(|_| {
         let err = std::io::Error::last_os_error();
-        std::io::Error::other(
-            format!("shm_open {name} failed: {err:#}"),
-        )
+        std::io::Error::other(format!("shm_open {name} failed: {err:#}"))
     })?;
     let mut f = File::from(fd);
     if let Some(offset) = data_offset {
@@ -293,9 +293,7 @@ fn read_shared_memory_data(
     };
 
     if let Err(err) = shm_unlink(name) {
-        log::warn!(
-            "Unable to unlink kitty image protocol shm file {name}: {err:#}"
-        );
+        log::warn!("Unable to unlink kitty image protocol shm file {name}: {err:#}");
     }
     Ok(data)
 }
@@ -1060,8 +1058,7 @@ impl KittyImage {
         let mut keys: BTreeMap<&str, &str> = BTreeMap::new();
         for k_v in key_string.split(',') {
             let (k, v) = k_v.split_once('=')?;
-            
-            
+
             keys.insert(k, v);
         }
 
