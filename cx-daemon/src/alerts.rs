@@ -162,6 +162,7 @@ impl AlertDatabase {
     }
 
     /// Get an alert by ID
+    #[allow(dead_code)]
     pub fn get(&self, id: &str) -> Result<Option<Alert>> {
         let alert = self
             .conn
@@ -284,6 +285,7 @@ impl AlertDatabase {
     }
 
     /// Delete old dismissed alerts (older than days)
+    #[allow(dead_code)]
     pub fn cleanup_old_alerts(&self, days: i64) -> Result<usize> {
         let cutoff = Utc::now() - chrono::Duration::days(days);
         let rows = self.conn.execute(

@@ -74,17 +74,18 @@ fn libpng() {
         .file("libpng/pngwtran.c")
         .file("libpng/pngwutil.c");
 
-    if let Ok(arch) = env::var("CARGO_CFG_TARGET_ARCH") {
-        match arch.as_str() {
-            "aarch64" | "arm" => {
-                cfg.file("libpng/arm/arm_init.c")
-                    .file("libpng/arm/filter_neon.S")
-                    .file("libpng/arm/filter_neon_intrinsics.c")
-                    .file("libpng/arm/palette_neon_intrinsics.c");
-            }
-            _ => {}
-        }
-    }
+    // ARM NEON optimizations disabled - incompatible with newer libpng
+    // if let Ok(arch) = env::var("CARGO_CFG_TARGET_ARCH") {
+    //     match arch.as_str() {
+    //         "aarch64" | "arm" => {
+    //             cfg.file("libpng/arm/arm_init.c")
+    //                 .file("libpng/arm/filter_neon.S")
+    //                 .file("libpng/arm/filter_neon_intrinsics.c")
+    //                 .file("libpng/arm/palette_neon_intrinsics.c");
+    //         }
+    //         _ => {}
+    //     }
+    // }
 
     cfg.include("zlib");
     cfg.include("libpng");
@@ -102,7 +103,7 @@ fn libpng() {
 
     fs::write(
         build_dir.join("pnglibconf.h"),
-        fs::read_to_string("libpng/scripts/pnglibconf.h.prebuilt").unwrap(),
+        fs::read_to_string("libpng/pnglibconf.h.prebuilt").unwrap(),
     )
     .unwrap();
 

@@ -26,16 +26,16 @@ use clap::Parser;
 
 #[cfg(feature = "hrm")]
 use hrm_ai::{
-    database::AgentRepository,
-    fire::{AgentTerminationService, TerminationConfig},
+    database::{DatabaseConnection, PostgresAgentRepository},
+    fire::{AgentTerminationService, FireCommand as HrmFireCommand, TerminationConfig},
     theme::SovereignTheme,
 };
 
 /// Terminate (fire) an AI agent
 #[derive(Debug, Parser, Clone)]
 pub struct FireCommand {
-    /// Agent ID to terminate
-    pub agent_id: String,
+    /// Agent ID or Server ID to terminate
+    pub target: String,
 
     /// Skip confirmation prompt (dangerous)
     #[arg(long, short = 'f')]
@@ -45,9 +45,13 @@ pub struct FireCommand {
     #[arg(long, short = 'r')]
     pub reason: Option<String>,
 
-    /// Graceful shutdown timeout in seconds
-    #[arg(long, default_value = "30")]
-    pub timeout: u64,
+    /// Termination type: immediate, graceful, force
+    #[arg(long, short = 't', default_value = "graceful")]
+    pub termination_type: String,
+
+    /// Dry run mode (validate but don't terminate)
+    #[arg(long)]
+    pub dry_run: bool,
 
     /// Output format: table, json
     #[arg(long, default_value = "table")]
@@ -93,101 +97,83 @@ impl FireCommand {
 
 #[cfg(feature = "hrm")]
 fn run_fire_with_hrm(cmd: FireCommand) -> Result<()> {
-    use std::time::Duration;
     use tokio::runtime::Runtime;
 
     let rt = Runtime::new()?;
     rt.block_on(async {
-        let theme = SovereignTheme::new();
+        let theme = SovereignTheme::default();
 
         // Print header
-        theme.print_header("CX Linux Agent Termination");
+        println!();
+        println!("  {}┌─ CX Linux Agent Termination ────────────────────────────────────────┐{}", 
+            theme.primary.ansi_fg, "\x1b[0m");
+        println!("  {}│                                                                      │{}", 
+            theme.primary.ansi_fg, "\x1b[0m");
+
+        println!();
+        println!("  ⚠️  Termination Request");
+        println!("  ─────────────────────────────────────");
+        println!("  Target:      {}", cmd.target);
+        println!("  Type:        {}", cmd.termination_type);
+        if let Some(ref reason) = cmd.reason {
+            println!("  Reason:      {}", reason);
+        }
+        if cmd.dry_run {
+            println!("  Mode:        DRY RUN");
+        }
+        println!();
 
         // Get database URL from environment
         let db_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://localhost/cx_agents".to_string());
 
-        // Create repository to fetch agent info
-        let repo = AgentRepository::new(&db_url).await?;
+        // Create database connection and repository
+        let db_conn = DatabaseConnection::new(&db_url).await
+            .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
+        let repository = PostgresAgentRepository::new(db_conn);
 
-        // Fetch agent details
-        let agent = match repo.get_agent(&cmd.agent_id).await? {
-            Some(a) => a,
-            None => {
-                theme.print_error(&format!("Agent not found: {}", cmd.agent_id));
-                return Ok(());
-            }
+        // Create termination config
+        let config = TerminationConfig {
+            graceful_timeout_seconds: 30,
+            cleanup_data: true,
+            notify_stakeholders: true,
         };
-
-        println!();
-        println!("  ⚠️  Termination Request");
-        println!("  ─────────────────────────────────────");
-        println!("  Agent ID:    {}", agent.id);
-        println!("  Name:        {}", agent.name);
-        println!("  Type:        {}", agent.agent_type);
-        println!("  Server:      {}", agent.server_id);
-        println!("  Status:      {:?}", agent.status);
-        if let Some(ref reason) = cmd.reason {
-            println!("  Reason:      {}", reason);
-        }
-        println!();
-
-        // Require confirmation unless --force
-        if !cmd.force {
-            println!("  ⚠️  WARNING: This action cannot be undone!");
-            println!();
-            print!("  Type the agent name to confirm termination: ");
-            std::io::Write::flush(&mut std::io::stdout())?;
-
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input)?;
-
-            if input.trim() != agent.name {
-                println!();
-                println!("  ❌ Termination cancelled - name mismatch");
-                return Ok(());
-            }
-        }
 
         // Create termination service
-        let config = TerminationConfig {
-            database_url: db_url,
-            graceful_timeout: Duration::from_secs(cmd.timeout),
-            audit_enabled: true,
+        let service = AgentTerminationService::new(repository, config);
+
+        // Build HRM fire command
+        let hrm_cmd = HrmFireCommand {
+            target: cmd.target.clone(),
+            reason: cmd.reason.clone(),
+            termination_type: cmd.termination_type.clone(),
+            force: cmd.force,
+            dry_run: cmd.dry_run,
         };
 
-        let service = AgentTerminationService::new(config).await?;
-
-        // Terminate agent
-        println!();
-        println!("  🔥 Initiating graceful shutdown...");
-
-        let reason = cmd
-            .reason
-            .unwrap_or_else(|| "Manual termination".to_string());
-        let result = service.terminate_agent(&cmd.agent_id, &reason).await?;
-
-        if result.success {
-            println!();
-            theme.print_success("Agent terminated successfully");
-            println!();
-            println!("  Agent ID:       {}", cmd.agent_id);
-            println!("  Shutdown Time:  {}ms", result.shutdown_duration_ms);
-            println!("  Audit ID:       {}", result.audit_id);
-            println!();
-
-            if result.tasks_migrated > 0 {
-                println!(
-                    "  📋 {} pending tasks migrated to other agents",
-                    result.tasks_migrated
-                );
-            }
+        // Terminate agent(s)
+        if !cmd.dry_run {
+            println!("  🔥 Initiating {} termination...", cmd.termination_type);
         } else {
-            theme.print_error("Termination failed");
-            if let Some(error) = result.error {
-                println!("  Error: {}", error);
+            println!("  🔍 Validating termination (dry run)...");
+        }
+
+        let results = service.fire_agent(&hrm_cmd).await
+            .map_err(|e| anyhow::anyhow!("Termination failed: {}", e))?;
+
+        println!();
+        
+        if results.is_empty() {
+            println!("  ❌ No agents were terminated (cancelled or not found)");
+        } else {
+            println!("  {}✅ Termination complete!{}", theme.success.ansi_fg, "\x1b[0m");
+            println!();
+            println!("  Agents terminated: {}", results.len());
+            for status in &results {
+                println!("    • {:?}", status);
             }
         }
+        println!();
 
         Ok(())
     })

@@ -11,14 +11,13 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::Command;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
 
-use super::database::{ScanResult, VulnerabilityCache, VulnerabilityRecord};
+use super::database::VulnerabilityCache;
 use super::{OutputFormat, ScanCommand, StatusCommand};
 
 /// CVSS severity thresholds

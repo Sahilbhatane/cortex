@@ -381,6 +381,7 @@ impl AskCommand {
                 break;
             }
 
+            #[allow(deprecated)]
             let token_str = model.token_to_str(token, llama_cpp_2::model::Special::Tokenize)?;
 
             // CX Terminal: Append to accumulator to detect split markers

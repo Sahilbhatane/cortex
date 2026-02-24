@@ -1944,6 +1944,7 @@ const fn default_half_cell() -> Dimension {
 }
 
 /// CX Terminal: 24px left padding for better visual spacing
+#[allow(dead_code)]
 const fn default_cx_left_padding() -> Dimension {
     Dimension::Pixels(24.)
 }

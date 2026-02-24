@@ -369,6 +369,7 @@ impl SecurityDatabase {
     }
 
     /// Get a patch record by ID
+    #[allow(dead_code)]
     pub fn get_patch(&self, id: &str) -> Result<Option<PatchRecord>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, package_name, from_version, to_version, vulnerabilities_fixed,
@@ -407,6 +408,7 @@ impl SecurityDatabase {
     }
 
     /// Update patch status
+    #[allow(dead_code)]
     pub fn update_patch_status(&self, id: &str, status: PatchStatus) -> Result<()> {
         self.conn.execute(
             "UPDATE patch_history SET status = ?1 WHERE id = ?2",

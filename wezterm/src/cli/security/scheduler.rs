@@ -367,7 +367,7 @@ fn remove_timer(id: &str) -> Result<()> {
 
 /// Generate systemd service unit content
 fn generate_service_unit(schedule: &Schedule, use_user_mode: bool) -> String {
-    let mut args = vec!["security", "schedule", "run", &schedule.name];
+    let args = vec!["security", "schedule", "run", &schedule.name];
 
     let exec_path = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("/usr/bin/cx"));
 

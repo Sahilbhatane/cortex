@@ -177,6 +177,7 @@ pub async fn check_license() -> Result<LicenseInfo, String> {
 }
 
 /// Check if a feature is available for the current license tier
+#[allow(dead_code)]
 pub fn has_feature(info: &LicenseInfo, feature: &str) -> bool {
     info.features.contains(&feature.to_string())
 }

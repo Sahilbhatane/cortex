@@ -20,11 +20,12 @@
 
 use anyhow::Result;
 use clap::Parser;
+use std::collections::HashMap;
 
 #[cfg(feature = "hrm")]
 use hrm_ai::{
-    agent::AgentStatus,
-    hire::{AgentHiringService, HireConfig},
+    database::{DatabaseConnection, PostgresAgentRepository},
+    hire::{AgentHiringService, HireCommand as HrmHireCommand, HireConfig},
     theme::SovereignTheme,
 };
 
@@ -78,6 +79,14 @@ pub struct HireCommand {
     #[arg(long, short = 'y')]
     pub yes: bool,
 
+    /// Force deployment without checks
+    #[arg(long)]
+    pub force: bool,
+
+    /// Dry run mode (validate but don't deploy)
+    #[arg(long)]
+    pub dry_run: bool,
+
     /// Output format: table, json
     #[arg(long, default_value = "table")]
     pub format: String,
@@ -126,10 +135,14 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
 
     let rt = Runtime::new()?;
     rt.block_on(async {
-        let theme = SovereignTheme::new();
+        let theme = SovereignTheme::default();
 
         // Print header
-        theme.print_header("CX Linux Agent Deployment");
+        println!();
+        println!("  {}┌─ CX Linux Agent Deployment ─────────────────────────────────────────┐{}", 
+            theme.primary.ansi_fg, "\x1b[0m");
+        println!("  {}│                                                                      │{}", 
+            theme.primary.ansi_fg, "\x1b[0m");
 
         println!();
         println!("  📋 Deployment Request");
@@ -144,8 +157,8 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
         }
         println!();
 
-        // Confirm unless --yes
-        if !cmd.yes {
+        // Confirm unless --yes or --dry-run
+        if !cmd.yes && !cmd.dry_run {
             print!("  Deploy this agent? [y/N] ");
             std::io::Write::flush(&mut std::io::stdout())?;
 
@@ -162,43 +175,44 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
         let db_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://localhost/cx_agents".to_string());
 
-        // Create hiring service
+        // Create database connection and repository
+        let db_conn = DatabaseConnection::new(&db_url).await
+            .map_err(|e| anyhow::anyhow!("Database connection failed: {}", e))?;
+        let repository = PostgresAgentRepository::new(db_conn);
+
+        // Create hiring config with default capabilities
         let config = HireConfig {
             database_url: db_url,
             default_capabilities: get_default_capabilities(&cmd.agent_type),
+            max_agents_per_server: 5,
         };
 
-        let service = AgentHiringService::new(config).await?;
+        // Create hiring service
+        let service = AgentHiringService::new(repository, config);
 
-        // Generate agent name if not provided
-        let agent_name = cmd.name.unwrap_or_else(|| {
-            format!(
-                "{}-{}",
-                cmd.agent_type,
-                &uuid::Uuid::new_v4().to_string()[..8]
-            )
-        });
+        // Build HRM hire command
+        let hrm_cmd = HrmHireCommand {
+            server: cmd.server.clone(),
+            agent_type: cmd.agent_type.to_string(),
+            name: cmd.name.clone(),
+            capabilities: cmd.capabilities.map(|c| c.join(",")),
+            force: cmd.force,
+            dry_run: cmd.dry_run,
+        };
 
         // Deploy agent
         println!("  🚀 Deploying agent...");
 
-        let agent = service
-            .hire_agent(
-                &agent_name,
-                &cmd.agent_type.to_string(),
-                &cmd.server,
-                cmd.capabilities.unwrap_or_default(),
-            )
-            .await?;
+        let result = service.hire_agent(&hrm_cmd).await
+            .map_err(|e| anyhow::anyhow!("Deployment failed: {}", e))?;
 
         println!();
-        theme.print_success(&format!("Agent deployed: {}", agent.id));
+        println!("  {}✅ Agent deployed successfully!{}", theme.success.ansi_fg, "\x1b[0m");
         println!();
-        println!("  Agent ID:    {}", agent.id);
-        println!("  Name:        {}", agent.name);
-        println!("  Type:        {}", agent.agent_type);
-        println!("  Server:      {}", agent.server_id);
-        println!("  Status:      {:?}", agent.status);
+        println!("  Agent ID:    {}", result.agent_id);
+        println!("  Server:      {}", result.server_id);
+        println!("  Status:      {:?}", result.status);
+        println!("  Message:     {}", result.message);
         println!();
 
         Ok(())
@@ -206,8 +220,8 @@ fn run_hire_with_hrm(cmd: HireCommand) -> Result<()> {
 }
 
 #[cfg(feature = "hrm")]
-fn get_default_capabilities(agent_type: &AgentType) -> Vec<String> {
-    match agent_type {
+fn get_default_capabilities(agent_type: &AgentType) -> HashMap<String, Vec<String>> {
+    let capabilities = match agent_type {
         AgentType::Devops => vec![
             "deploy".into(),
             "rollback".into(),
@@ -238,5 +252,8 @@ fn get_default_capabilities(agent_type: &AgentType) -> Vec<String> {
             "notify".into(),
             "report".into(),
         ],
-    }
+    };
+    let mut map = HashMap::new();
+    map.insert(agent_type.to_string(), capabilities);
+    map
 }

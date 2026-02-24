@@ -18,7 +18,7 @@ use std::collections::HashSet;
 use std::process::Command;
 
 use super::database::{PatchRecord, PatchStatus, SecurityDatabase};
-use super::scanner::{self, ScanSummary, Severity, VulnerablePackage};
+use super::scanner::{self, Severity, VulnerablePackage};
 use super::{PatchCommand, PatchStrategy};
 
 /// Patch plan for a single package
@@ -453,6 +453,7 @@ fn load_patcher_config() -> Result<PatcherConfig> {
 }
 
 /// Rollback a previously applied patch
+#[allow(dead_code)]
 pub fn rollback_patch(patch_id: &str) -> Result<()> {
     let db = SecurityDatabase::open()?;
     let patch = db

@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 
 /// Detected project context
 #[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
 pub struct ProjectContext {
     pub cwd: PathBuf,
     pub dir_name: String,
@@ -22,6 +23,7 @@ pub struct ProjectContext {
 
 /// Type of project detected
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum ProjectType {
     Python,
     Node,
@@ -91,6 +93,7 @@ impl ProjectContext {
     }
 
     /// Get context string for AI prompts
+    #[allow(dead_code)]
     pub fn to_prompt_context(&self) -> String {
         let mut ctx = format!("Current directory: {}\n", self.cwd.display());
 

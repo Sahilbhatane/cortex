@@ -95,6 +95,7 @@ enum Response {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct AlertInfo {
     id: String,
     severity: String,

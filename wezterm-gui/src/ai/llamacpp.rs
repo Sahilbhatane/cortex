@@ -294,6 +294,7 @@ impl LlamaCppProvider {
             output_tokens.push(next_token);
 
             // Convert token to string to check for <|im_end|>
+            #[allow(deprecated)]
             let token_str = self
                 .model
                 .token_to_str(next_token, llama_cpp_2::model::Special::Tokenize)
@@ -329,6 +330,7 @@ impl LlamaCppProvider {
         // Convert output tokens to string
         let mut output = String::new();
         for token in &output_tokens {
+            #[allow(deprecated)]
             if let Ok(s) = self
                 .model
                 .token_to_str(*token, llama_cpp_2::model::Special::Tokenize)
