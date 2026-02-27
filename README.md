@@ -19,7 +19,7 @@
   <a href="https://github.com/cxlinux-ai/cx-core/blob/main/LICENSE.md">
     <img src="https://img.shields.io/badge/License-BSL%201.1-blue.svg" alt="License" />
   </a>
-  <a href="https://discord.gg/uCqHvxjU83">
+  <a href="https://discord.gg/7K6TR7qtS">
     <img src="https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white" alt="Discord" />
   </a>
 </p>

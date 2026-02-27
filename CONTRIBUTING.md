@@ -112,5 +112,5 @@ Be respectful and constructive. We're all here to build something great.
 
 ## Questions?
 
-- Discord: https://discord.gg/cxlinux
+- Discord: https://discord.gg/7K6TR7qtS
 - GitHub Issues: https://github.com/cxlinux-ai/cx/issues
